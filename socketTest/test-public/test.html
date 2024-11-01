@@ -1,0 +1,54 @@
+<!-- socketTest/test-public/test.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socket.IO Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f0f0;
+        }
+        .test-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        #connection-status {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Socket.IO Connection Test</h1>
+        <p>This is a test page for Socket.IO connectivity.</p>
+        <div id="connection-status">Status: Checking connection...</div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        console.log('Test page loaded');
+        
+        const socket = io();
+        const statusDiv = document.getElementById('connection-status');
+
+        socket.on('connect', () => {
+            console.log('Socket connected!');
+            statusDiv.textContent = `Status: Connected (Socket ID: ${socket.id})`;
+            statusDiv.style.color = 'green';
+        });
+
+        socket.on('connect_error', (error) => {
+            console.error('Connection error:', error);
+            statusDiv.textContent = `Status: Error - ${error.message}`;
+            statusDiv.style.color = 'red';
+        });
+    </script>
+</body>
+</html>

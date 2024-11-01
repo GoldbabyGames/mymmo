@@ -1,0 +1,11 @@
+gameClient.js:286 DOM loaded, initializing game...
+gameClient.js:4 GameClient initializing...
+gameClient.js:14 Found outfit form: <form id=​"create-outfit-form" class=​"creation-form" onsubmit=​"return false;​">​…​</form>​
+gameClient.js:16 Form attributes: Object
+gameClient.js:69 Setting up outfit creation form handlers
+main.js:3 DOM loaded
+gameClient.js:4 GameClient initializing...
+gameClient.js:14 Found outfit form: <form id=​"create-outfit-form" class=​"creation-form" onsubmit=​"return false;​">​…​</form>​
+gameClient.js:16 Form attributes: Object
+gameClient.js:69 Setting up outfit creation form handlers
+(index):151 Socket connected: MoRxjiRlxzE803JYAAAB

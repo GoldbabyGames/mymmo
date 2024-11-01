@@ -1,0 +1,32 @@
+main.js:3 DOM loaded
+main.js:17 Creating new GameClient instance
+gameClient.js:4 GameClient initializing...
+gameClient.js:8 Socket initialization status: Object
+gameClient.js:36 Found outfit form: <form id=​"create-outfit-form" class=​"creation-form" onsubmit=​"return false;​">​…​</form>​
+gameClient.js:37 Form attributes: Object
+gameClient.js:45 Creating ViewManager instance...
+viewManager.js:3 ViewManager initializing...
+viewManager.js:11 Setting up tab button listeners...
+viewManager.js:13 Found tab buttons: 3
+viewManager.js:17 Setting up listener for tab: management
+viewManager.js:17 Setting up listener for tab: champion
+viewManager.js:17 Setting up listener for tab: arena
+viewManager.js:26 Setting up structure upgrade buttons...
+viewManager.js:30 Action buttons container: 
+							<button class="button" data-action="upgrade-training">Upgrade Training Facility</button>
+							<button class="button" data-action="upgrade-library">Upgrade Library</button>
+						
+viewManager.js:36 Found upgrade buttons: Objectlibrary: button.buttontraining: button.button[[Prototype]]: Object
+viewManager.js:42 Adding click listener to training button
+viewManager.js:53 Adding click listener to library button
+gameClient.js:122 Setting up outfit creation form handlers
+(index):151 Socket connected: EBNDj12f2cGSAwmAAAAJ
+gameClient.js:23 Socket connected successfully Object
+gameClient.js:138 Form submission intercepted
+gameClient.js:155 Attempting to create outfit: 31oct12
+gameClient.js:171 Emitting create-outfit event
+gameClient.js:59 Received outfit-created event: {structures: {…}, _id: '6723fe8488d3324e43e01bc0', name: '31oct12', userId: '6723fe8488d3324e43e01bbf', level: 1, …}
+viewManager.js:44 Training facility upgrade clicked
+gameClient.js:184 Requesting structure upgrade: trainingFacility
+gameClient.js:187 Current socket state: {socketId: 'EBNDj12f2cGSAwmAAAAJ', connected: true, outfitId: '6723fe8488d3324e43e01bc0'}
+gameClient.js:210 Emitting upgrade-structure event: {structureType: 'trainingFacility', outfitId: '6723fe8488d3324e43e01bc0'}
