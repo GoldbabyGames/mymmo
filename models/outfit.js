@@ -9,9 +9,10 @@ const OutfitSchema = new mongoose.Schema({
         minLength: 3,
         maxLength: 30
     },
-    userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true
+    playerId: {
+        type: String,
+        required: true,
+        index: true
     },
     level: {
         type: Number,
@@ -23,6 +24,11 @@ const OutfitSchema = new mongoose.Schema({
         type: Number,
         default: 1000,
         min: 0
+    },
+    // Single champion reference instead of array
+    champion: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Champion'
     },
     structures: {
         trainingFacility: {

@@ -3,41 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arena Champions - MMO Arena Manager</title>
+    <title>Arena Champions</title>
     <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
     <div class="container">
-        <!-- Initial Outfit Creation Screen -->
-        <div id="outfit-creation" class="screen">
+        <!-- Outfit Creation Screen - Hidden by default -->
+        <div id="outfit-creation" class="screen" style="display: none;">
             <h1>Arena Champions</h1>
             <h2>Create Your Fighting Outfit</h2>
-            <p>The year is 2077. In a world ravaged by nuclear war, underground fighting rings have become the new centers of power...</p>
-            
-    <form id="create-outfit-form" class="creation-form" onsubmit="return false;">
-		<div class="form-group">
-        <label for="outfit-name">Name your fighting outfit:</label>
-        <input type="text" 
-               id="outfit-name" 
-               name="outfit-name" 
-               required 
-               minlength="3" 
-               maxlength="30"
-               autocomplete="off">
-        <div id="name-error" class="error-text"></div>
-    </div>
-    <button type="button" id="create-outfit-btn" class="button">Create Outfit</button>
-	</form>
+            <p>The year is 2077. In a world ravaged by nuclear war, underground
+            fighting rings have become the new centers of power...</p>
+            <form id="create-outfit-form">
+                <label for="outfit-name">Name your fighting outfit:</label>
+                <input type="text" id="outfit-name" name="outfit-name" required>
+                <div id="name-error" class="error-text"></div>
+                <button type="submit" id="create-outfit-btn">Create Outfit</button>
+            </form>
         </div>
 
-        <!-- Main Game Area -->
+        <!-- Game Area Screen - Hidden by default -->
         <div id="game-area" class="screen" style="display: none;">
-            <!-- Top Status Bar -->
-            <div id="outfit-info" class="status-bar">
-                <!-- Populated by JavaScript -->
-            </div>
+            <div id="outfit-info" class="status-bar"></div>
 
-            <!-- Main Game Tabs -->
             <div class="tab-container">
                 <div class="tab-buttons">
                     <button class="tab-button active" data-tab="management">Outfit Management</button>
@@ -45,137 +33,112 @@
                     <button class="tab-button" data-tab="arena">Arena</button>
                 </div>
 
-                <!-- Management Tab -->
                 <div id="management" class="tab-content" style="display: block;">
                     <div class="management-grid">
                         <div id="structures" class="structure-list">
-                            <!-- Populated by JavaScript -->
+                            <!-- Structures will be populated by JavaScript -->
                         </div>
-                        
+
                         <div class="action-buttons">
-							<button class="button" data-action="upgrade-training">Upgrade Training Facility</button>
-							<button class="button" data-action="upgrade-library">Upgrade Library</button>
-						</div>
+                            <button data-action="upgrade-training" class="button">Upgrade Training Facility</button>
+                            <button data-action="upgrade-library" class="button">Upgrade Library</button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Champion Tab -->
-                <div id="champion" class="tab-content" style="display: none;">
+                <div id="champion" class="tab-content">
                     <div id="champions" class="champion-display">
-                        <!-- Populated by JavaScript -->
+                        <!-- Champion info will be populated by JavaScript -->
                     </div>
-                    
+
                     <div class="champion-actions">
-                        <button id="find-champion" class="button">Find New Champion</button>
+                        <button data-action="find-champion" class="button">Find New Champion</button>
+
                         <div class="training-buttons">
                             <h4>Train Attributes:</h4>
-                            <button class="button train-attribute" data-attribute="strength">Train Strength</button>
-                            <button class="button train-attribute" data-attribute="agility">Train Agility</button>
-                            <button class="button train-attribute" data-attribute="hardiness">Train Hardiness</button>
-                            <button class="button train-attribute" data-attribute="stamina">Train Stamina</button>
-                            <button class="button train-attribute" data-attribute="intelligence">Train Intelligence</button>
-                            <button class="button train-attribute" data-attribute="unarmedSkill">Train Unarmed</button>
-                            <button class="button train-attribute" data-attribute="weaponSkill">Train Weapons</button>
-                            <button class="button train-attribute" data-attribute="survivalSkill">Train Survival</button>
+                            <button data-action="train-strength" class="button">Train Strength</button>
+                            <button data-action="train-agility" class="button">Train Agility</button>
+                            <button data-action="train-hardiness" class="button">Train Hardiness</button>
+                            <button data-action="train-stamina" class="button">Train Stamina</button>
+                            <button data-action="train-intelligence" class="button">Train Intelligence</button>
+                            <button data-action="train-unarmed" class="button">Train Unarmed</button>
+                            <button data-action="train-weapons" class="button">Train Weapons</button>
+                            <button data-action="train-survival" class="button">Train Survival</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Arena Tab -->
-                <div id="arena" class="tab-content style="display: none;">
+                <div id="arena" class="tab-content">
                     <div class="arena-status">
                         <h3>Arena Status</h3>
                         <div id="arena-participants">
-                            <!-- Populated by JavaScript -->
+                            <!-- Arena participants will be populated by JavaScript -->
                         </div>
                     </div>
-                    
+
                     <div class="arena-actions">
-                        <button id="enter-arena" class="button">Enter Arena</button>
+                        <button data-action="enter-arena" class="button">Enter Arena</button>
+                        
                         <div id="arena-instructions">
                             <h4>Champion Instructions:</h4>
-                            <select id="arena-strategy">
-                                <option value="aggressive">Aggressive - Fight at any cost</option>
-                                <option value="cautious">Cautious - Retreat if heavily wounded</option>
-                                <option value="opportunistic">Opportunistic - Focus on loot, avoid fights</option>
-                            </select>
+                            <button data-action="set-aggressive" class="button">Aggressive</button>
+                            <button data-action="set-cautious" class="button">Cautious</button>
+                            <button data-action="set-opportunistic" class="button">Opportunistic</button>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- Game Log -->
-            <div id="game-log" class="log-container">
-                <h3>Activity Log</h3>
-                <div id="log-entries" class="log-entries">
-                    <!-- Populated by JavaScript -->
                 </div>
             </div>
         </div>
 
-        <!-- Champion Selection Modal -->
+        <!-- Champion Selection Modal - Hidden by default -->
         <div id="champion-selection" class="modal" style="display: none;">
             <div class="modal-content">
                 <h2>Available Champion</h2>
                 <div id="champion-details" class="champion-details">
-                    <!-- Populated by JavaScript -->
+                    <!-- Champion details will be populated by JavaScript -->
                 </div>
+                
                 <div class="modal-actions">
-                    <button id="hire-champion" class="button">Hire Champion (200 Gold)</button>
-                    <button id="generate-champion" class="button">Find Another Champion</button>
-                    <button id="cancel-hiring" class="button button-secondary">Cancel</button>
+                    <button data-action="hire-champion" class="button">Hire Champion (200 Gold)</button>
+                    <button data-action="find-another" class="button">Find Another Champion</button>
+                    <button data-action="cancel-champion" class="button">Cancel</button>
                 </div>
             </div>
         </div>
+
+        <!-- Game Log -->
+        <div id="game-log" class="log-container">
+            <h3>Activity Log</h3>
+            <div id="log-entries" class="log-entries"></div>
+        </div>
     </div>
 
-    <!-- Socket Debug Element -->
-	<div id="socket-debug" style="position: fixed; bottom: 10px; right: 10px; padding: 10px; background: #f0f0f0; border: 1px solid #ccc;">
-    Socket Status: Initializing...
-	</div>
-
-    <!-- Scripts (Order is important) -->
+    <!-- Socket.IO script -->
     <script src="/socket.io/socket.io.js"></script>
-	<script>
-    // Initialize single socket instance for the whole application
-    window.gameSocket = io({
-        reconnection: true,
-        reconnectionAttempts: 3,
-        timeout: 10000,
-        transports: ['websocket']
-    });
 
-    const debugDiv = document.getElementById('socket-debug');
-    
-    gameSocket.on('connect', () => {
-        console.log('Socket connected:', gameSocket.id);
-        debugDiv.textContent = `Socket Status: Connected (${gameSocket.id})`;
-        debugDiv.style.color = 'green';
-    });
+    <!-- Game scripts -->
+    <script>
+        // DOM Ready handler
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM loaded');
+            
+            // Only initialize if no gameClient exists
+            if (!window.gameClient) {
+                // Make sure we don't create a new socket if one exists
+                if (!window.gameSocket) {
+                    console.log('Initializing socket connection...');
+                    window.gameSocket = io();
+                }
+                
+                console.log('Creating new GameClient instance');
+                window.gameClient = new GameClient();
+            }
+        });
+    </script>
 
-    gameSocket.on('connect_error', (error) => {
-        console.error('Connection error:', error);
-        debugDiv.textContent = `Socket Status: Error - ${error.message}`;
-        debugDiv.style.color = 'red';
-    });
-
-    gameSocket.on('disconnect', (reason) => {
-        console.log('Socket disconnected:', reason);
-        debugDiv.textContent = `Socket Status: Disconnected (${reason})`;
-        debugDiv.style.color = 'orange';
-    });
-
-    // Prevent form submissions from reloading the page
-    document.addEventListener('submit', (e) => {
-        e.preventDefault();
-        console.log('Global submit prevention');
-        return false;
-    });
-	</script>
-
-    <!-- Game Scripts -->
-    <script src="/js/gameClient.js"></script>
-    <script src="/js/viewManager.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/ViewManager.js"></script>
+    <script src="/js/GameClient.js"></script>
     <script src="/js/main.js"></script>
 </body>
 </html>

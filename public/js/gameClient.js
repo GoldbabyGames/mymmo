@@ -3,98 +3,193 @@ class GameClient {
     constructor() {
         console.log('GameClient initializing...');
         this.socket = window.gameSocket;
+		this.hasChampion = false;
+		this.currentChampion = null; // Add this to track current champion
         
         if (!this.socket) {
             console.error('Socket.IO not initialized!');
             return;
         }
-        
-		// Add connection event listener
-        this.socket.on('connect', () => {
-            console.log('Socket connected successfully', {
-                id: this.socket.id,
-                connected: this.socket.connected
-            });
-        });
 		
-		this.socket.on('disconnect', () => {
-            console.log('Socket disconnected');
-        });
-		
-
 		// Create ViewManager instance
         console.log('Creating ViewManager instance...');
         this.viewManager = new ViewManager(this);
 
         // Initialize only if not already initialized
         if (!this.initialized) {
-			console.log('First time initialization of GameClient');
+            console.log('First time initialization of GameClient');
             this.setupSocketListeners();
+            this.setupChampionSocketListeners();
             this.initializeFormHandler();
+            this.checkInitialState();
             this.initialized = true;
         }
+		
+		// Add simple connection event listeners for debugging
+        this.socket.on('connect', () => {
+            console.log('Socket connected successfully:', this.socket.id);
+        });
+
+        this.socket.on('connect_error', (error) => {
+            console.error('Socket connection error:', error);
+            this.showError('Connection error. Please refresh the page.');
+        });
+
+        this.socket.on('disconnect', () => {
+            console.log('Socket disconnected');
+        });
     }
+	
+	 // Add this method
+		checkInitialState() {
+			console.log('Checking initial game state...');
+			this.socket.emit('check-initial-state');
+		}
 
     setupSocketListeners() {
-    // Game state events
-    this.socket.on('outfit-created', (outfit) => {
-        console.log('Received outfit-created event:', outfit);
-        this.currentOutfitId = outfit._id; 
-        this.hideOutfitCreation();
-        this.showGameArea();
-        this.updateOutfitDisplay(outfit);
-    });
+		// Add these new socket listeners for initial state
+        this.socket.on('load-existing-outfit', (outfit) => {
+            console.log('Loading existing outfit:', outfit);
+            this.currentOutfitId = outfit._id;
+            this.hideOutfitCreation();
+            this.showGameArea();
+            this.updateOutfitDisplay(outfit);
+            
+            // Handle champion if it exists
+            if (outfit.champion) {
+                console.log('Outfit has champion:', outfit.champion);
+                this.currentChampion = outfit.champion;
+                this.hasChampion = true;
+                this.updateChampionDisplay(outfit.champion);
+            } else {
+                this.currentChampion = null;
+                this.hasChampion = false;
+                this.updateChampionDisplay(null);
+            }
+        });
+		
+		this.socket.on('show-outfit-creation', () => {
+            console.log('Showing outfit creation screen');
+            document.getElementById('outfit-creation').style.display = 'block';
+            document.getElementById('game-area').style.display = 'none';
+        });
+		
+		// Game state events
+		this.socket.on('outfit-created', (outfit) => {
+            console.log('Received outfit-created event:', outfit);
+            this.currentOutfitId = outfit._id;
+            this.hideOutfitCreation();
+            this.showGameArea();
+            this.updateOutfitDisplay(outfit);
+            // New outfit has no champion
+            this.updateChampionDisplay(null);
+        });
 
-    this.socket.on('error', (error) => {
-        console.error('Received error from server:', error);
-        this.showError(error.message);
-        this.enableFormElements();
-    });
+		this.socket.on('error', (error) => {
+			console.error('Received error from server:', error);
+			this.showError(error.message);
+			this.enableFormElements();
+		});
 
-    this.socket.on('champion-generated', (champion) => {
-        this.updateChampionSelection(champion);
-    });
+		this.socket.on('training-started', (data) => {
+			this.updateOutfitDisplay(data.outfit);
+			this.updateChampionDisplay(data.champion);
+			this.showTrainingTimer(data.champion);
+		});
 
-    this.socket.on('champion-hired', (data) => {
-        this.updateOutfitDisplay(data.outfit);
-        this.updateChampionDisplay(data.champion);
-        this.hideChampionSelection();
-    });
-
-    this.socket.on('training-started', (data) => {
-        this.updateOutfitDisplay(data.outfit);
-        this.updateChampionDisplay(data.champion);
-        this.showTrainingTimer(data.champion);
-    });
-
-    this.socket.on('champion-available', (champion) => {
-        this.updateChampionDisplay(champion);
-        this.hideTrainingTimer();
-    });
-    
-    // Structure upgrade listeners
-    this.socket.on('structure-upgraded', (data) => {
-        console.log('Structure upgrade successful:', data);
-        this.updateOutfitDisplay(data.outfit);
-        this.viewManager.updateStructureCosts(data.outfit);
+		this.socket.on('champion-available', (champion) => {
+			this.updateChampionDisplay(champion);
+			this.hideTrainingTimer();
+		});
+		
+		// Structure upgrade listeners
+		this.socket.on('structure-upgraded', (data) => {
+			console.log('Structure upgrade successful:', data);
+			this.updateOutfitDisplay(data.outfit);
+			this.viewManager.updateStructureCosts(data.outfit);
         
-        // Update the game log if you have one
-        if (this.addLogEntry) {
-            this.addLogEntry(`Upgraded structure successfully!`, 'success');
-        }
-    });
+			// Update the game log if you have one
+			if (this.addLogEntry) {
+				this.addLogEntry(`Upgraded structure successfully!`, 'success');
+			}
+		});
 
-    this.socket.on('upgrade-failed', (error) => {
-        console.error('Upgrade failed:', error);
-        this.showError(error.message);
-    });
+		this.socket.on('upgrade-failed', (error) => {
+			console.error('Upgrade failed:', error);
+			this.showError(error.message);
+		});
     
-    this.socket.on('log-entry', (data) => {
-        if (this.addLogEntry) {
-            this.addLogEntry(data.message, data.type);
-        }
-    });
-} // End of setupSocketListeners method
+		this.socket.on('log-entry', (data) => {
+			if (this.addLogEntry) {
+				this.addLogEntry(data.message, data.type);
+			}
+		});
+	}
+	
+	//champion socket listeners
+	setupChampionSocketListeners() {
+        console.log('Setting up champion socket listeners');
+        
+        this.socket.on('champion-generated', (champion) => {
+			console.log('Champion generated:', champion);
+			try {
+				this.updateChampionSelection(champion);
+				this.viewManager.showChampionSelection();
+			} catch (error) {
+				console.error('Error updating champion selection:', error);
+				this.showError('Failed to display champion');
+			}
+		});
+
+        this.socket.on('champion-hired', (data) => {
+            console.log('Champion hired:', data);
+            const { champion, outfit } = data;
+            this.currentChampion = champion;
+            this.hasChampion = true;
+            this.updateChampionDisplay(champion);
+            this.updateOutfitDisplay(outfit);
+            this.viewManager.hideChampionSelection();
+        });
+
+        this.socket.on('hire-failed', (error) => {
+            console.error('Hire failed:', error);
+            this.showError(error.message);
+        });
+    }
+
+    findNewChampion() {
+		console.log('Requesting new champion generation');
+		if (!this.currentOutfitId) {
+			console.error('No outfit ID available');
+			this.showError('Game state error: No outfit selected');
+			return;
+		}
+
+		try {
+			this.socket.emit('generate-champion', {
+				outfitId: this.currentOutfitId
+			});
+		} catch (error) {
+			console.error('Error requesting champion generation:', error);
+			this.showError('Failed to request new champion');
+		}
+	}
+
+    hireChampion(tempChampionId) {
+		console.log('Requesting to hire champion:', tempChampionId);
+		if (!this.currentOutfitId) {
+			console.error('No outfit ID available');
+			this.showError('Game state error: No outfit selected');
+			return;
+		}
+
+		this.socket.emit('hire-champion', {
+			outfitId: this.currentOutfitId,
+			tempChampionId: tempChampionId
+		});
+	}
+	
+	
 
     initializeFormHandler() {
     console.log('GameClient: Setting up form handler');
@@ -180,6 +275,12 @@ class GameClient {
             outfitId: this.currentOutfitId
         });
 
+		// Add Champion validation to upgradeStructure method
+        if (!this.hasChampion) {
+            this.showError('You must hire a champion before upgrading structures');
+            return;
+        }
+
         if (!this.socket?.connected) {
             console.error('Socket not connected');
             this.showError('Connection error: Socket disconnected');
@@ -238,11 +339,15 @@ class GameClient {
         const championsDiv = document.getElementById('champions');
         if (!champion) {
             championsDiv.innerHTML = '<p>No champion hired yet.</p>';
+            this.hasChampion = false;
+            this.viewManager.setHasChampion(false);
             return;
         }
 
+		this.hasChampion = true;
+        this.viewManager.setHasChampion(true);
+
         championsDiv.innerHTML = `
-            <h3>Champion</h3>
             <div class="champion-stats" data-champion-id="${champion._id}">
                 <h4>${this.escapeHtml(champion.name)}</h4>
                 <div class="stat-group">
@@ -265,27 +370,65 @@ class GameClient {
     }
 
     updateChampionSelection(champion) {
-        const details = document.getElementById('champion-details');
-        details.innerHTML = `
-            <h3>${this.escapeHtml(champion.name)}</h3>
-            <div class="potential-champion" data-champion-id="${champion._id}">
-                <div class="stat-group">
-                    <h4>Physical Attributes:</h4>
-                    <p>Strength: ${champion.physical.strength}</p>
-                    <p>Agility: ${champion.physical.agility}</p>
-                    <p>Hardiness: ${champion.physical.hardiness}</p>
-                    <p>Stamina: ${champion.physical.stamina}</p>
-                </div>
-                <div class="stat-group">
-                    <h4>Mental Attributes:</h4>
-                    <p>Intelligence: ${champion.mental.intelligence}</p>
-                    <p>Unarmed Skill: ${champion.mental.unarmedSkill}</p>
-                    <p>Weapon Skill: ${champion.mental.weaponSkill}</p>
-                    <p>Survival Skill: ${champion.mental.survivalSkill}</p>
-                </div>
-            </div>
-        `;
-    }
+		console.log('Updating champion selection with:', champion);
+		
+		// Get the champion details container
+		const details = document.getElementById('champion-details');
+		if (!details) {
+			console.error('Champion details container not found');
+			return;
+		}
+		
+		// Update the champion details
+		details.innerHTML = `
+			<h3>${this.escapeHtml(champion.name)}</h3>
+			<div class="potential-champion" data-temp-champion-id="${champion.tempId}">
+				<div class="stat-group">
+					<h4>Physical Attributes:</h4>
+					<p>Strength: ${champion.physical.strength}</p>
+					<p>Agility: ${champion.physical.agility}</p>
+					<p>Hardiness: ${champion.physical.hardiness}</p>
+					<p>Stamina: ${champion.physical.stamina}</p>
+				</div>
+				<div class="stat-group">
+					<h4>Mental Attributes:</h4>
+					<p>Intelligence: ${champion.mental.intelligence}</p>
+					<p>Unarmed Skill: ${champion.mental.unarmedSkill}</p>
+					<p>Weapon Skill: ${champion.mental.weaponSkill}</p>
+					<p>Survival Skill: ${champion.mental.survivalSkill}</p>
+				</div>
+			</div>
+		`;
+
+		// Set up the hire button event listener
+		const hireButton = document.getElementById('hire-champion');
+		if (hireButton) {
+			// Remove existing listeners
+			const newHireButton = hireButton.cloneNode(true);
+			hireButton.parentNode.replaceChild(newHireButton, hireButton);
+			
+			// Add new listener
+			newHireButton.addEventListener('click', () => {
+				const tempChampionId = details.querySelector('.potential-champion')?.dataset.tempChampionId;
+				if (tempChampionId) {
+					this.hireChampion(tempChampionId);
+				} else {
+					console.error('No temporary champion ID found');
+				}
+			});
+		} else {
+			console.error('Hire button not found');
+		}
+		
+		// Show the modal
+		const modal = document.getElementById('champion-selection');
+		if (modal) {
+			modal.style.display = 'block';
+		} else {
+			console.error('Champion selection modal not found');
+		}
+			
+	}
 
     showTrainingTimer(champion) {
         const timerDiv = document.createElement('div');

@@ -1,35 +1,48 @@
 // socket/gameSocket.js
 const mongoose = require('mongoose');
 const GameController = require('../controllers/gameController');
+const { BASE_CHAMPION_COST } = require('../config/gameConstants');
 
 function initializeGameSockets(io) {
 	console.log('Game socket initialization started');
 	
     io.on('connection', async (socket) => {
+		const playerId = socket.request.session.playerId;
 		console.log('Player connected:', socket.id);
+
+		// Initial state check when player connects
+        socket.on('check-initial-state', async () => {
+            try {
+                // Use the updated getOutfitByPlayerId that populates the champion
+                const outfit = await GameController.getOutfitByPlayerId(playerId);
+                if (outfit) {
+                    console.log('Existing outfit found for player:', playerId);
+                    // This will now include the populated champion if it exists
+                    socket.emit('load-existing-outfit', outfit);
+                } else {
+                    console.log('No existing outfit found for player:', playerId);
+                    socket.emit('show-outfit-creation');
+                }
+            } catch (error) {
+                console.error('Error checking initial state:', error);
+                socket.emit('error', { message: 'Error loading game state' });
+            }
+        });
+
 
         socket.on('create-outfit', async (data) => {
             console.log('Create outfit request received:', data);
-			
-			
-			try {
-                const tempUserId = new mongoose.Types.ObjectId();
-                console.log('Processing outfit creation:', {
-                    userId: tempUserId,
-                    name: data.name
-                });
-
-                const outfit = await GameController.createOutfit(tempUserId, data.name);
+            try {
+                const outfit = await GameController.createOutfit(playerId, data.name);
                 console.log('Outfit created successfully:', outfit._id);
                 socket.emit('outfit-created', outfit);
-
             } catch (error) {
                 console.error('Error creating outfit:', error);
                 socket.emit('error', { message: error.message });
             }
         });
 
-        // Add structure upgrade handler
+        //Structure upgrade handler
         socket.on('upgrade-structure', async (data) => {
             console.log('Received upgrade-structure request:', data);
             
@@ -66,13 +79,53 @@ function initializeGameSockets(io) {
         });
 
         socket.on('generate-champion', async (data) => {
+			console.log('Generate champion request received:', data);
+			
             try {
+                if (!data.outfitId) {
+                    throw new Error('Missing outfit ID');
+                }
+
                 const champion = await GameController.generateChampion(data.outfitId);
+                console.log('Champion generated successfully:', champion);
                 socket.emit('champion-generated', champion);
+
             } catch (error) {
+                console.error('Error generating champion:', error);
                 socket.emit('error', { message: error.message });
             }
         });
+
+		// Champion hiring handler - updated to handle single champion
+        socket.on('hire-champion', async (data) => {
+            console.log('Hire champion request received:', data);
+            
+            try {
+                if (!data.outfitId || !data.tempChampionId) {
+                    throw new Error('Missing required hire parameters');
+                }
+
+                const result = await GameController.hireChampion(
+                    data.outfitId,
+                    data.tempChampionId
+                );
+
+                // Emit success event with updated data including populated champion
+                socket.emit('champion-hired', {
+                    champion: result.champion,
+                    outfit: result.outfit  // This now includes the populated champion reference
+                });
+                
+                socket.emit('log-entry', {
+                    message: `Hired ${result.champion.name} for ${BASE_CHAMPION_COST} gold`,
+                    type: 'success'
+                });
+
+            } catch (error) {
+                socket.emit('hire-failed', { message: error.message });
+            }
+        });
+
 
         socket.on('train-champion', async (data) => {
             try {

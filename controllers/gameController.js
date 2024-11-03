@@ -2,32 +2,47 @@
 const Champion = require('../models/champion');
 const Outfit = require('../models/outfit');
 const mongoose = require('mongoose');
+const ChampionGenerator = require('../utils/championGenerator');
+const { BASE_CHAMPION_COST, TRAINING_COST, OFFENSIVE_WORDS } = require('../config/gameConstants');
 
-// Game constants
-const OFFENSIVE_WORDS = ['shit', 'fuck', 'nigger']; // In production, move to separate config file
-const TRAINING_COST = 50;
-const BASE_CHAMPION_COST = 200;
 
 class GameController {
-    static async createOutfit(userId, name) {
-        console.log('Creating outfit with:', { userId, name });
+    static pendingChampions = new Map(); // Store temporarily generated champions
+	
+	static async getOutfitByPlayerId(playerId) {
+        try {
+            const outfit = await Outfit.findOne({ playerId });
+            return outfit;
+        } catch (error) {
+            console.error('Error finding outfit:', error);
+            throw error;
+        }
+    }
+	
+	
+	static async createOutfit(playerId, name) {
+        console.log('Creating outfit with:', { playerId, name });
         
         try {
-			// Check if outfit with this name already exists
-			const existingOutfit = await Outfit.findOne({ name });
-			if (existingOutfit) {
-            console.log('Outfit with this name already exists');
-            throw new Error('An outfit with this name already exists');
-			}
-			
-			
+            // Check if player already has an outfit
+            const existingOutfit = await Outfit.findOne({ playerId });
+            if (existingOutfit) {
+                throw new Error('You already have an outfit');
+            }
+
+            // Check if outfit name is taken
+            const nameExists = await Outfit.findOne({ name });
+            if (nameExists) {
+                throw new Error('An outfit with this name already exists');
+            }
+
             // Validate outfit name
             if (!this.validateOutfitName(name)) {
                 throw new Error('Invalid outfit name');
             }
 
             const outfit = new Outfit({
-                userId,
+                playerId,
                 name,
                 level: 1,
                 gold: 1000,
@@ -37,22 +52,7 @@ class GameController {
                 }
             });
 
-            console.log('Outfit model created:', outfit);
-
-            // Validate the document before saving
-            const validationError = outfit.validateSync();
-            if (validationError) {
-                console.error('Validation error:', validationError);
-                throw validationError;
-            }
-
             const savedOutfit = await outfit.save();
-            console.log('Outfit saved successfully:', savedOutfit);
-            
-            // Double-check the save
-            const verifiedOutfit = await Outfit.findById(savedOutfit._id);
-            console.log('Verified outfit in database:', verifiedOutfit);
-
             return savedOutfit;
         } catch (error) {
             console.error('Error in createOutfit:', error);
@@ -68,27 +68,147 @@ class GameController {
     }
 
     static async generateChampion(outfitId) {
+		try {
+			const outfit = await Outfit.findById(outfitId);
+			if (!outfit) {
+				throw new Error('Outfit not found');
+			}
+
+			// Generate champion data using our generator
+			const championData = await ChampionGenerator.generateChampion(outfit);
+			
+			// Store the generated champion data temporarily with an expiration
+			const tempId = new mongoose.Types.ObjectId();
+			GameController.pendingChampions.set(tempId.toString(), {  // Use GameController.pendingChampions
+				championData,
+				outfitId,
+				timestamp: Date.now()
+			});
+
+			// Clean up old pending champions (older than 5 minutes)
+			this.cleanupPendingChampions();
+
+			// Return champion data with temporary ID for client display
+			return { ...championData, tempId: tempId.toString() };
+		} catch (error) {
+			console.error('Error in generateChampion:', error);
+			throw error;
+		}
+	}
+	
+	// Add cleanup method
+	static cleanupPendingChampions() {
+		const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
+		for (const [id, data] of GameController.pendingChampions.entries()) {
+			if (data.timestamp < fiveMinutesAgo) {
+				GameController.pendingChampions.delete(id);
+			}
+		}
+	}
+
+
+	// TODO: Production Enhancement Needed
+	// - Implement MongoDB replica set for transaction support
+	// - Add proper atomic operations
+	// - Consider implementing compensation/rollback logic for failed operations
+	static async hireChampion(outfitId, tempChampionId) {
+		console.log('Attempting to hire champion:', { outfitId, tempChampionId });
+		
+		try {
+			// Get the pending champion data
+			const pendingChampion = GameController.pendingChampions.get(tempChampionId);
+			if (!pendingChampion) {
+				throw new Error('Champion not found or expired. Please generate a new champion.');
+			}
+
+			// First, verify outfit exists and has enough gold and no champion
+			const outfit = await Outfit.findOne({
+				_id: outfitId,
+				gold: { $gte: BASE_CHAMPION_COST },
+				champion: { $exists: false }
+			});
+
+			if (!outfit) {
+				// Check specific failure conditions to provide better error messages
+				const existingOutfit = await Outfit.findById(outfitId);
+				if (!existingOutfit) {
+					throw new Error('Outfit not found');
+				}
+				if (existingOutfit.gold < BASE_CHAMPION_COST) {
+					throw new Error(`Insufficient gold. Hiring costs ${BASE_CHAMPION_COST} gold.`);
+				}
+				if (existingOutfit.champion) {
+					throw new Error('Outfit already has a champion. Dismiss current champion before hiring a new one.');
+				}
+			}
+
+			// Create new champion
+			const champion = new Champion({
+				outfitId,
+				...pendingChampion.championData,
+				status: 'available'
+			});
+
+			// Save the champion first
+			const savedChampion = await champion.save();
+
+			// Atomically update the outfit with new gold amount and champion reference
+			const updatedOutfit = await Outfit.findOneAndUpdate(
+				{
+					_id: outfitId,
+					gold: { $gte: BASE_CHAMPION_COST },
+					champion: { $exists: false }
+				},
+				{
+					$inc: { gold: -BASE_CHAMPION_COST },
+					$set: { champion: savedChampion._id }
+				},
+				{
+					new: true,
+					runValidators: true
+				}
+			);
+
+			// If outfit update failed, roll back champion creation
+			if (!updatedOutfit) {
+				await Champion.findByIdAndDelete(savedChampion._id);
+				throw new Error('Failed to update outfit. Another operation may have modified it.');
+			}
+
+			// Remove the pending champion from temporary storage
+			GameController.pendingChampions.delete(tempChampionId);
+
+			console.log('Champion hired successfully:', {
+				championId: savedChampion._id,
+				outfitId: outfit._id,
+				remainingGold: updatedOutfit.gold
+			});
+
+			// Return populated outfit
+			const populatedOutfit = await Outfit.findById(outfitId).populate('champion');
+			return { 
+				champion: savedChampion,
+				outfit: populatedOutfit
+			};
+
+		} catch (error) {
+			console.error('Error in hireChampion:', error);
+			throw error;
+		}
+	}
+
+
+	static async getOutfitByPlayerId(playerId) {
         try {
-            const outfit = await Outfit.findById(outfitId);
-            if (!outfit) {
-                throw new Error('Outfit not found');
-            }
-
-            const baseStats = this.calculateBaseStats(outfit.level);
-            const champion = new Champion({
-                outfitId,
-                name: this.generateChampionName(),
-                physical: baseStats.physical,
-                mental: baseStats.mental,
-                status: 'available'
-            });
-
-            return champion;
+            const outfit = await Outfit.findOne({ playerId })
+                .populate('champion');
+            return outfit;
         } catch (error) {
-            console.error('Error generating champion:', error);
+            console.error('Error finding outfit:', error);
             throw error;
         }
     }
+
 
     static async trainChampion(championId, attribute) {
         try {
@@ -173,51 +293,59 @@ class GameController {
 	static async upgradeStructure(outfitId, structureType) {
     console.log('Upgrading structure:', { outfitId, structureType });
     
-    try {
-        const outfit = await Outfit.findById(outfitId);
-        if (!outfit) {
-            throw new Error('Outfit not found');
-        }
+		try {
+			const outfit = await Outfit.findById(outfitId);
+			if (!outfit) {
+				throw new Error('Outfit not found');
+			}
 
-        // Validate structure type
-        if (!['trainingFacility', 'library'].includes(structureType)) {
-            throw new Error('Invalid structure type');
-        }
 
-        // Calculate upgrade cost based on current level
-        const currentLevel = outfit.structures[structureType].level;
-        const upgradeCost = 1000 * Math.pow(2, currentLevel - 1);
+			// Check if outfit has any champions
+            const championCount = await Champion.countDocuments({ outfitId });
+            if (championCount === 0) {
+                throw new Error('You must hire a champion before upgrading structures');
+            }
 
-        console.log('Upgrade details:', {
-            currentLevel,
-            upgradeCost,
-            availableGold: outfit.gold
-        });
 
-        // Check if outfit has enough gold
-        if (outfit.gold < upgradeCost) {
-            throw new Error(`Insufficient gold. Upgrade costs ${upgradeCost} gold.`);
-        }
+			// Validate structure type
+			if (!['trainingFacility', 'library'].includes(structureType)) {
+				throw new Error('Invalid structure type');
+			}
 
-        // Check maximum level (10)
-        if (currentLevel >= 10) {
-            throw new Error(`${structureType} is already at maximum level`);
-        }
+			// Calculate upgrade cost based on current level
+			const currentLevel = outfit.structures[structureType].level;
+			const upgradeCost = 1000 * Math.pow(2, currentLevel - 1);
 
-        // Update structure level and deduct gold
-        outfit.structures[structureType].level += 1;
-        outfit.gold -= upgradeCost;
+			console.log('Upgrade details:', {
+				currentLevel,
+				upgradeCost,
+				availableGold: outfit.gold
+			});
 
-        // Save changes
-        await outfit.save();
+			// Check if outfit has enough gold
+			if (outfit.gold < upgradeCost) {
+				throw new Error(`Insufficient gold. Upgrade costs ${upgradeCost} gold.`);
+			}
+
+			// Check maximum level (10)
+			if (currentLevel >= 10) {
+				throw new Error(`${structureType} is already at maximum level`);
+			}
+
+			// Update structure level and deduct gold
+			outfit.structures[structureType].level += 1;
+			outfit.gold -= upgradeCost;
+
+			// Save changes
+			await outfit.save();
         
-        console.log('Structure upgraded successfully:', outfit);
-        return outfit;
-    } catch (error) {
-        console.error('Error upgrading structure:', error);
-        throw error;
-    }
-}
+			console.log('Structure upgraded successfully:', outfit);
+			return outfit;
+		} catch (error) {
+			console.error('Error upgrading structure:', error);
+			throw error;
+		}
+	}
 }
 
 module.exports = GameController;

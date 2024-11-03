@@ -1,0 +1,234 @@
+main.js:3 DOM loaded
+main.js:17 Creating new GameClient instance
+gameClient.js:4 GameClient initializing...
+gameClient.js:92 Setting up champion socket listeners
+gameClient.js:27 Creating ViewManager instance...
+viewManager.js:3 ViewManager initializing...
+viewManager.js:13 ViewManager: Setting up event listeners
+viewManager.js:15 Setting up tab button listeners...
+viewManager.js:17 Found tab buttons: 3
+viewManager.js:21 Setting up listener for tab: management
+viewManager.js:21 Setting up listener for tab: champion
+viewManager.js:21 Setting up listener for tab: arena
+viewManager.js:30 Setting up structure upgrade buttons...
+viewManager.js:34 Action buttons container: 
+							<button class="button" data-action="upgrade-training">Upgrade Training Facility</button>
+							<button class="button" data-action="upgrade-library">Upgrade Library</button>
+						
+viewManager.js:40 Found upgrade buttons: {training: button.button, library: button.button}
+viewManager.js:46 Adding click listener to training button
+viewManager.js:57 Adding click listener to library button
+viewManager.js:69 Setting up champion event listeners
+viewManager.js:74 Found Find Champion button
+gameClient.js:32 First time initialization of GameClient
+gameClient.js:143 GameClient: Setting up form handler
+gameClient.js:148 Found form and button, removing any existing listeners
+(index):166 Socket connected: qefEwzCPWRVbqIjlAAAH
+gameClient.js:16 Socket connected successfully {id: 'qefEwzCPWRVbqIjlAAAH', connected: true}
+gameClient.js:160 Form submission intercepted
+gameClient.js:188 Attempting to create outfit: 1nov5
+gameClient.js:204 Emitting create-outfit event
+(index):186 Global submit prevention
+gameClient.js:42 Received outfit-created event: {name: '1nov5', userId: '67252b2fe9ec4842ca9bd500', level: 1, gold: 1000, structures: {…}, …}
+viewManager.js:24 Tab button clicked: champion
+viewManager.js:155 Switching to tab: champion
+viewManager.js:162 Updating tab buttons: 3
+viewManager.js:166 Processing button: management
+viewManager.js:166 Processing button: champion
+viewManager.js:169 Activating button: champion
+viewManager.js:166 Processing button: arena
+viewManager.js:178 Found tab contents: 3
+viewManager.js:181 Processing content: management
+viewManager.js:181 Processing content: champion
+viewManager.js:183 Showing content: champion
+viewManager.js:181 Processing content: arena
+viewManager.js:76 Find Champion button clicked
+gameClient.js:114 Requesting new champion generation
+gameClient.js:95 Champion generated: {outfitId: '67252b2fe9ec4842ca9bd502', name: 'Phoenix Nightshade', physical: {…}, mental: {…}, status: 'available', …}
+gameClient.js:114 Requesting new champion generation
+gameClient.js:95 Champion generated: {outfitId: '67252b2fe9ec4842ca9bd502', name: 'Nova Stormforge the Fierce', physical: {…}, mental: {…}, status: 'available', …}
+gameClient.js:114 Requesting new champion generation
+gameClient.js:95 Champion generated: {outfitId: '67252b2fe9ec4842ca9bd502', name: 'Phoenix Dawnbringer', physical: {…}, mental: {…}, status: 'available', …}
+gameClient.js:114 Requesting new champion generation
+gameClient.js:95 Champion generated: {outfitId: '67252b2fe9ec4842ca9bd502', name: 'Senna Bloodfist', physical: {…}, mental: {…}, status: 'available', …}
+gameClient.js:114 Requesting new champion generation
+gameClient.js:95 Champion generated: {outfitId: '67252b2fe9ec4842ca9bd502', name: 'Raven Shadowweave', physical: {…}, mental: {…}, status: 'available', …}
+gameClient.js:114 Requesting new champion generation
+gameClient.js:95 Champion generated: {outfitId: '67252b2fe9ec4842ca9bd502', name: 'Thorne Ironheart', physical: {…}, mental: {…}, status: 'available', …}
+gameClient.js:114 Requesting new champion generation
+gameClient.js:95 Champion generated: {outfitId: '67252b2fe9ec4842ca9bd502', name: 'Luna Duskwalker', physical: {…}, mental: {…}, status: 'available', …}
+gameClient.js:114 Requesting new champion generation
+gameClient.js:95 Champion generated: {outfitId: '67252b2fe9ec4842ca9bd502', name: 'Thorne Stormforge', physical: {…}, mental: {…}, status: 'available', …}
+gameClient.js:114 Requesting new champion generation
+gameClient.js:95 Champion generated: {outfitId: '67252b2fe9ec4842ca9bd502', name: 'Shadow Stormforge', physical: {…}, mental: {…}, status: 'available', …}
+gameClient.js:114 Requesting new champion generation
+gameClient.js:95 Champion generated: {outfitId: '67252b2fe9ec4842ca9bd502', name: 'Marcus Steelbringer', physical: {…}, mental: {…}, status: 'available', …}
+gameClient.js:114 Requesting new champion generation
+gameClient.js:95 Champion generated: {outfitId: '67252b2fe9ec4842ca9bd502', name: 'Caspian Ironheart', physical: {…}, mental: {…}, status: 'available', …}
+gameClient.js:114 Requesting new champion generation
+gameClient.js:95 Champion generated: {outfitId: '67252b2fe9ec4842ca9bd502', name: 'Aurora Flamecaller the Tactical', physical: {…}, mental: {…}, status: 'available', …}
+gameClient.js:114 Requesting new champion generation
+gameClient.js:95 Champion generated: {outfitId: '67252b2fe9ec4842ca9bd502', name: 'Shadow Ironheart', physical: {…}, mental: {…}, status: 'available', …}
+gameClient.js:114 Requesting new champion generation
+gameClient.js:95 Champion generated: {outfitId: '67252b2fe9ec4842ca9bd502', name: 'Drake Nightshade the Cunning', physical: {…}, mental: {…}, status: 'available', …}
+gameClient.js:114 Requesting new champion generation
+gameClient.js:95 Champion generated: {outfitId: '67252b2fe9ec4842ca9bd502', name: 'Phoenix Steelbringer', physical: {…}, mental: {…}, status: 'available', …}
+gameClient.js:114 Requesting new champion generation
+gameClient.js:95 Champion generated: {outfitId: '67252b2fe9ec4842ca9bd502', name: 'Senna Stormforge', physical: {…}, mental: {…}, status: 'available', …}
+gameClient.js:114 Requesting new champion generation
+gameClient.js:95 Champion generated: {outfitId: '67252b2fe9ec4842ca9bd502', name: 'Blade Flamecaller', physical: {…}, mental: {…}, status: 'available', …}
+gameClient.js:114 Requesting new champion generation
+gameClient.js:95 Champion generated: {outfitId: '67252b2fe9ec4842ca9bd502', name: 'Blade Ironheart', physical: {…}, mental: {…}, status: 'available', …}
+gameClient.js:127 Requesting to hire champion: 67252b50e9ec4842ca9bd528
+gameClient.js:108 Hire failed: {message: 'Champion validation failed: name: Path `name` is required.'}
+(anonymous) @ gameClient.js:108
+Emitter.emit @ index.js:136
+emitEvent @ socket.js:553
+onevent @ socket.js:540
+onpacket @ socket.js:508
+Emitter.emit @ index.js:136
+(anonymous) @ manager.js:217
+Promise.then
+(anonymous) @ globals.js:4
+ondecoded @ manager.js:216
+Emitter.emit @ index.js:136
+add @ index.js:142
+ondata @ manager.js:203
+Emitter.emit @ index.js:136
+_onPacket @ socket.js:259
+Emitter.emit @ index.js:136
+onPacket @ transport.js:99
+onData @ transport.js:91
+ws.onmessage @ websocket.js:48
+gameClient.js:396 Error: Champion validation failed: name: Path `name` is required.
+showError @ gameClient.js:396
+(anonymous) @ gameClient.js:109
+Emitter.emit @ index.js:136
+emitEvent @ socket.js:553
+onevent @ socket.js:540
+onpacket @ socket.js:508
+Emitter.emit @ index.js:136
+(anonymous) @ manager.js:217
+Promise.then
+(anonymous) @ globals.js:4
+ondecoded @ manager.js:216
+Emitter.emit @ index.js:136
+add @ index.js:142
+ondata @ manager.js:203
+Emitter.emit @ index.js:136
+_onPacket @ socket.js:259
+Emitter.emit @ index.js:136
+onPacket @ transport.js:99
+onData @ transport.js:91
+ws.onmessage @ websocket.js:48
+gameClient.js:114 Requesting new champion generation
+gameClient.js:95 Champion generated: {outfitId: '67252b2fe9ec4842ca9bd502', name: 'Phoenix Steelbringer', physical: {…}, mental: {…}, status: 'available', …}
+gameClient.js:114 Requesting new champion generation
+gameClient.js:95 Champion generated: {outfitId: '67252b2fe9ec4842ca9bd502', name: 'Wolf Flamecaller the Fierce', physical: {…}, mental: {…}, status: 'available', …}
+gameClient.js:127 Requesting to hire champion: 67252b5ae9ec4842ca9bd52e
+gameClient.js:108 Hire failed: {message: 'Champion validation failed: name: Path `name` is required.'}
+(anonymous) @ gameClient.js:108
+Emitter.emit @ index.js:136
+emitEvent @ socket.js:553
+onevent @ socket.js:540
+onpacket @ socket.js:508
+Emitter.emit @ index.js:136
+(anonymous) @ manager.js:217
+Promise.then
+(anonymous) @ globals.js:4
+ondecoded @ manager.js:216
+Emitter.emit @ index.js:136
+add @ index.js:142
+ondata @ manager.js:203
+Emitter.emit @ index.js:136
+_onPacket @ socket.js:259
+Emitter.emit @ index.js:136
+onPacket @ transport.js:99
+onData @ transport.js:91
+ws.onmessage @ websocket.js:48
+gameClient.js:396 Error: Champion validation failed: name: Path `name` is required.
+showError @ gameClient.js:396
+(anonymous) @ gameClient.js:109
+Emitter.emit @ index.js:136
+emitEvent @ socket.js:553
+onevent @ socket.js:540
+onpacket @ socket.js:508
+Emitter.emit @ index.js:136
+(anonymous) @ manager.js:217
+Promise.then
+(anonymous) @ globals.js:4
+ondecoded @ manager.js:216
+Emitter.emit @ index.js:136
+add @ index.js:142
+ondata @ manager.js:203
+Emitter.emit @ index.js:136
+_onPacket @ socket.js:259
+Emitter.emit @ index.js:136
+onPacket @ transport.js:99
+onData @ transport.js:91
+ws.onmessage @ websocket.js:48
+viewManager.js:76 Find Champion button clicked
+gameClient.js:114 Requesting new champion generation
+gameClient.js:95 Champion generated: {outfitId: '67252b2fe9ec4842ca9bd502', name: 'Aria Stormforge the Tactical', physical: {…}, mental: {…}, status: 'available', …}
+gameClient.js:114 Requesting new champion generation
+gameClient.js:95 Champion generated: {outfitId: '67252b2fe9ec4842ca9bd502', name: 'Thorne Steelbringer the Survivor', physical: {…}, mental: {…}, status: 'available', …}
+gameClient.js:114 Requesting new champion generation
+gameClient.js:95 Champion generated: {outfitId: '67252b2fe9ec4842ca9bd502', name: 'Nova Steelbringer', physical: {…}, mental: {…}, status: 'available', …}
+gameClient.js:114 Requesting new champion generation
+gameClient.js:95 Champion generated: {outfitId: '67252b2fe9ec4842ca9bd502', name: 'Phoenix Frostborn', physical: {…}, mental: {…}, status: 'available', …}
+gameClient.js:114 Requesting new champion generation
+gameClient.js:95 Champion generated: {outfitId: '67252b2fe9ec4842ca9bd502', name: 'Phoenix Bloodfist', physical: {…}, mental: {…}, status: 'available', …}
+gameClient.js:114 Requesting new champion generation
+gameClient.js:95 Champion generated: {outfitId: '67252b2fe9ec4842ca9bd502', name: 'Luna Ironheart', physical: {…}, mental: {…}, status: 'available', …}
+gameClient.js:114 Requesting new champion generation
+gameClient.js:95 Champion generated: {outfitId: '67252b2fe9ec4842ca9bd502', name: 'Viper Shadowweave the Wise', physical: {…}, mental: {…}, status: 'available', …}
+gameClient.js:114 Requesting new champion generation
+gameClient.js:95 Champion generated: {outfitId: '67252b2fe9ec4842ca9bd502', name: 'Shadow Frostborn the Cunning', physical: {…}, mental: {…}, status: 'available', …}
+gameClient.js:114 Requesting new champion generation
+gameClient.js:95 Champion generated: {outfitId: '67252b2fe9ec4842ca9bd502', name: 'Caspian Duskwalker', physical: {…}, mental: {…}, status: 'available', …}
+gameClient.js:114 Requesting new champion generation
+gameClient.js:95 Champion generated: {outfitId: '67252b2fe9ec4842ca9bd502', name: 'Shadow Duskwalker the Wise', physical: {…}, mental: {…}, status: 'available', …}
+gameClient.js:114 Requesting new champion generation
+gameClient.js:95 Champion generated: {outfitId: '67252b2fe9ec4842ca9bd502', name: 'Viper Shadowweave the Unstoppable', physical: {…}, mental: {…}, status: 'available', …}
+gameClient.js:127 Requesting to hire champion: 67252b7ae9ec4842ca9bd546
+gameClient.js:108 Hire failed: {message: 'Champion validation failed: name: Path `name` is required.'}
+(anonymous) @ gameClient.js:108
+Emitter.emit @ index.js:136
+emitEvent @ socket.js:553
+onevent @ socket.js:540
+onpacket @ socket.js:508
+Emitter.emit @ index.js:136
+(anonymous) @ manager.js:217
+Promise.then
+(anonymous) @ globals.js:4
+ondecoded @ manager.js:216
+Emitter.emit @ index.js:136
+add @ index.js:142
+ondata @ manager.js:203
+Emitter.emit @ index.js:136
+_onPacket @ socket.js:259
+Emitter.emit @ index.js:136
+onPacket @ transport.js:99
+onData @ transport.js:91
+ws.onmessage @ websocket.js:48
+gameClient.js:396 Error: Champion validation failed: name: Path `name` is required.
+showError @ gameClient.js:396
+(anonymous) @ gameClient.js:109
+Emitter.emit @ index.js:136
+emitEvent @ socket.js:553
+onevent @ socket.js:540
+onpacket @ socket.js:508
+Emitter.emit @ index.js:136
+(anonymous) @ manager.js:217
+Promise.then
+(anonymous) @ globals.js:4
+ondecoded @ manager.js:216
+Emitter.emit @ index.js:136
+add @ index.js:142
+ondata @ manager.js:203
+Emitter.emit @ index.js:136
+_onPacket @ socket.js:259
+Emitter.emit @ index.js:136
+onPacket @ transport.js:99
+onData @ transport.js:91
+ws.onmessage @ websocket.js:48

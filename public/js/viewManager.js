@@ -2,8 +2,11 @@ class ViewManager {
     constructor(gameClient) {
         console.log('ViewManager initializing...');
         this.gameClient = gameClient;
-        this.activeTab = 'management'; // Default tab
+        this.hasChampion = false;
+		this.activeTab = 'management'; // Default tab
         this.setupEventListeners();
+		this.updateUpgradeButtons();
+		this.setupChampionEventListeners();
     }
 
     setupEventListeners() {
@@ -60,6 +63,96 @@ class ViewManager {
         } else {
             console.warn('Library upgrade button not found');
         }
+    }
+
+	setupChampionEventListeners() {
+        console.log('Setting up champion event listeners');
+
+        // Find New Champion button
+        const findChampionBtn = document.querySelector('[data-action="find-champion"]');
+        if (findChampionBtn) {
+            console.log('Found Find Champion button');
+            findChampionBtn.addEventListener('click', (e) => {
+                console.log('Find Champion button clicked');
+                e.preventDefault();
+                this.gameClient.findNewChampion();
+            });
+        } else {
+            console.warn('Find Champion button not found');
+        }
+
+        // Hire Champion button
+        const hireChampionBtn = document.querySelector('[data-action="hire-champion"]');
+		if (hireChampionBtn) {
+			hireChampionBtn.addEventListener('click', (e) => {
+				e.preventDefault();
+				const championDetails = document.querySelector('.potential-champion');
+				if (championDetails) {
+					const tempChampionId = championDetails.dataset.tempChampionId;
+					if (tempChampionId) {
+						this.gameClient.hireChampion(tempChampionId);
+					}
+				}
+			});
+		}
+
+
+
+        // Find Another Champion button
+        const findAnotherBtn = document.querySelector('[data-action="find-another"]');
+        if (findAnotherBtn) {
+            findAnotherBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.gameClient.findNewChampion();
+            });
+        }
+
+        // Cancel button in champion selection modal
+        const cancelBtn = document.querySelector('[data-action="cancel-champion"]');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.hideChampionSelection();
+            });
+        }
+    }
+
+    showChampionSelection() {
+        const modal = document.getElementById('champion-selection');
+        if (modal) {
+            modal.style.display = 'block';
+        }
+    }
+
+    hideChampionSelection() {
+        const modal = document.getElementById('champion-selection');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+
+
+	//new method to update button states
+    updateUpgradeButtons() {
+        const upgradeButtons = document.querySelectorAll('[data-action^="upgrade-"]');
+        upgradeButtons.forEach(button => {
+            button.disabled = !this.hasChampion;
+            // Add a tooltip to explain why it's disabled
+            if (!this.hasChampion) {
+                button.title = "Hire a champion first before upgrading structures";
+                button.classList.add('disabled-upgrade');
+            } else {
+                button.title = "";
+                button.classList.remove('disabled-upgrade');
+            }
+        });
+    }
+
+
+	// Add method to update champion status
+    setHasChampion(value) {
+        this.hasChampion = value;
+        this.updateUpgradeButtons();
     }
 
     switchTab(tabName) {
