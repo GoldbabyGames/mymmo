@@ -5,6 +5,7 @@ class GameClient {
         this.socket = window.gameSocket;
 		this.hasChampion = false;
 		this.currentChampion = null; // Add this to track current champion
+		this.currentOutfit = null;  // Initialize outfit data to null
         
         if (!this.socket) {
             console.error('Socket.IO not initialized!');
@@ -50,22 +51,34 @@ class GameClient {
 		// Add these new socket listeners for initial state
         this.socket.on('load-existing-outfit', (outfit) => {
             console.log('Loading existing outfit:', outfit);
-            this.currentOutfitId = outfit._id;
+			
+			// Store outfit data first
+            this.currentOutfit = { ...outfit };  // Make a copy of the outfit data
+			this.currentOutfitId = outfit._id;
+			
+			// Update UI state
             this.hideOutfitCreation();
             this.showGameArea();
             this.updateOutfitDisplay(outfit);
             
+			
             // Handle champion if it exists
             if (outfit.champion) {
                 console.log('Outfit has champion:', outfit.champion);
                 this.currentChampion = outfit.champion;
                 this.hasChampion = true;
                 this.updateChampionDisplay(outfit.champion);
+				this.viewManager.setHasChampion(true);
             } else {
                 this.currentChampion = null;
                 this.hasChampion = false;
                 this.updateChampionDisplay(null);
+				this.viewManager.setHasChampion(false);
             }
+			
+			// Initialize the game state in ViewManager
+			this.viewManager.initializeGameState(outfit);
+			
         });
 		
 		this.socket.on('show-outfit-creation', () => {
@@ -320,6 +333,7 @@ class GameClient {
 
     // Existing methods remain the same
     updateOutfitDisplay(outfit) {
+		console.log('updateOutfitDisplay called with outfit:', outfit);
         const outfitInfo = document.getElementById('outfit-info');
         outfitInfo.innerHTML = `
             <h3>${this.escapeHtml(outfit.name)}</h3>
@@ -452,6 +466,12 @@ class GameClient {
             }
         }, 1000);
     }
+
+	getCurrentOutfit() {
+		console.log('Getting current outfit:', this.currentOutfit);
+		return this.currentOutfit;
+}
+
 
     hideOutfitCreation() {
         const outfitCreation = document.getElementById('outfit-creation');

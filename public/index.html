@@ -11,9 +11,12 @@
         <!-- Outfit Creation Screen - Hidden by default -->
         <div id="outfit-creation" class="screen" style="display: none;">
             <h1>Arena Champions</h1>
+			
             <h2>Create Your Fighting Outfit</h2>
+			
             <p>The year is 2077. In a world ravaged by nuclear war, underground
             fighting rings have become the new centers of power...</p>
+			
             <form id="create-outfit-form">
                 <label for="outfit-name">Name your fighting outfit:</label>
                 <input type="text" id="outfit-name" name="outfit-name" required>
@@ -28,8 +31,10 @@
 
             <div class="tab-container">
                 <div class="tab-buttons">
-                    <button class="tab-button active" data-tab="management">Outfit Management</button>
+                    <button class="tab-button active" data-tab="management">Overview</button>
                     <button class="tab-button" data-tab="champion">Champion</button>
+					<button class="tab-button" data-tab="training-ground">Training Ground</button>
+					<button class="tab-button" data-tab="research">Research</button>
                     <button class="tab-button" data-tab="arena">Arena</button>
                 </div>
 
@@ -40,8 +45,8 @@
                         </div>
 
                         <div class="action-buttons">
-                            <button data-action="upgrade-training" class="button">Upgrade Training Facility</button>
-                            <button data-action="upgrade-library" class="button">Upgrade Library</button>
+                            <button data-action="upgrade-training" class="button">Upgrade Training Ground</button>
+                            <button data-action="upgrade-library" class="button">Upgrade Research Facility</button>
                         </div>
                     </div>
                 </div>
@@ -67,6 +72,22 @@
                         </div>
                     </div>
                 </div>
+
+				<!-- additional tab content containers -->
+				<div id="training-ground" class="tab-content">
+					<div class="training-ground-content">
+						<h2>Training Ground</h2>
+						<div class="placeholder">Training ground functionality coming soon...</div>
+					</div>
+				</div>
+
+				<div id="research" class="tab-content">
+					<div class="research-content">
+						<h2>Research</h2>
+						<div class="placeholder">Research functionality coming soon...</div>
+					</div>
+				</div>
+
 
                 <div id="arena" class="tab-content">
                     <div class="arena-status">
