@@ -336,6 +336,22 @@ class GameController {
 			outfit.structures[structureType].level += 1;
 			outfit.gold -= upgradeCost;
 
+			// Always update outfit level to the minimum of both structure levels
+			const trainingLevel = outfit.structures.trainingFacility.level;
+			const libraryLevel = outfit.structures.library.level;
+			const newOutfitLevel = Math.min(trainingLevel, libraryLevel);
+			
+			// Update outfit level
+			if (outfit.level !== newOutfitLevel) {
+				console.log('Updating outfit level:', {
+					oldLevel: outfit.level,
+					newLevel: newOutfitLevel,
+					trainingLevel,
+					libraryLevel
+				});
+				outfit.level = newOutfitLevel;
+			}
+
 			// Save changes
 			await outfit.save();
         

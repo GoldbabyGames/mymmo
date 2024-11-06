@@ -9,6 +9,7 @@ class ViewManager {
             'champion',
             'training-ground',
             'research',
+			'missions',
             'arena'
         ];
 		
@@ -192,6 +193,10 @@ class ViewManager {
                 this.updateResearchTab();
                 break;
 
+			case 'missions':
+                this.updateMissionsTab();
+                break; 
+			
             case 'arena':
                 this.updateArenaTab();
                 break;
@@ -222,10 +227,10 @@ class ViewManager {
     updateTrainingGroundTab() {
 		console.log('Updating training ground tab - START');
 		const trainingGround = document.getElementById('training-ground');
-		const currentOutfit = this.gameClient.getCurrentOutfit(); // Get outfit data
+		const currentOutfit = this.gameClient.getCurrentOutfit();
 		console.log('Current outfit data:', currentOutfit);
 
-		if (trainingGround && currentOutfit) {
+		if (trainingGround && currentOutfit?.structures?.trainingFacility) {
 			const level = currentOutfit.structures.trainingFacility.level;
 			console.log('Training Facility Level:', level);
 			const content = trainingGround.querySelector('.training-ground-content');
@@ -235,11 +240,6 @@ class ViewManager {
 					<div class="placeholder">Training ground functionality coming soon...</div>
 				`;
 			}
-		} else {
-			console.log('Missing required data:', {
-				hasTrainingGround: !!trainingGround,
-				hasOutfit: !!currentOutfit
-			});
 		}
 		console.log('Updating training ground tab - END');
 	}
@@ -250,7 +250,7 @@ class ViewManager {
 		const currentOutfit = this.gameClient.getCurrentOutfit();
 		console.log('Current outfit data:', currentOutfit);
 
-		if (research && currentOutfit) {
+		if (research && currentOutfit?.structures?.library) {
 			const level = currentOutfit.structures.library.level;
 			console.log('Library Level:', level);
 			const content = research.querySelector('.research-content');
@@ -260,14 +260,15 @@ class ViewManager {
 					<div class="placeholder">Research functionality coming soon...</div>
 				`;
 			}
-		} else {
-			console.log('Missing required data:', {
-				hasResearch: !!research,
-				hasOutfit: !!currentOutfit
-			});
-		}
+		} 
 		console.log('Updating research tab - END');
 	}
+
+	updateMissionsTab() {
+        console.log('Updating missions tab');
+		const missionsContent = document.getElementById('missions');
+        // Missions update logic will be implemented later
+    }
 
     updateArenaTab() {
         console.log('Updating arena tab');

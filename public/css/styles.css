@@ -84,14 +84,16 @@ body {
 
 
 .training-ground-content,
-.research-content {
+.research-content,
+.missions-content {
     padding: 20px;
     background-color: var(--secondary-color);
     border-radius: 0 0 var(--border-radius) var(--border-radius);
 }
 
 .training-ground-content h2,
-.research-content h2 {
+.research-content h2,
+.missions-content h2 {
     color: var(--accent-color);
     margin-bottom: 1rem;
     font-size: 1.5rem;
@@ -99,7 +101,8 @@ body {
 }
 
 .training-ground-content .placeholder,
-.research-content .placeholder {
+.research-content .placeholder,
+.missions-content .placeholder {
     color: var(--text-color);
     opacity: 0.7;
     text-align: center;

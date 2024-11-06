@@ -118,6 +118,11 @@ class GameClient {
 		// Structure upgrade listeners
 		this.socket.on('structure-upgraded', (data) => {
 			console.log('Structure upgrade successful:', data);
+    
+			// Update the cached outfit data
+			this.currentOutfit = data.outfit;  // Add this line
+			
+			// Update displays
 			this.updateOutfitDisplay(data.outfit);
 			this.viewManager.updateStructureCosts(data.outfit);
         
@@ -337,7 +342,7 @@ class GameClient {
         const outfitInfo = document.getElementById('outfit-info');
         outfitInfo.innerHTML = `
             <h3>${this.escapeHtml(outfit.name)}</h3>
-            <p>Level: ${outfit.level}</p>
+            <p>Base Level: ${outfit.level}</p>
             <p>Gold: ${outfit.gold}</p>
         `;
 
@@ -350,38 +355,38 @@ class GameClient {
     }
 
     updateChampionDisplay(champion) {
-        const championsDiv = document.getElementById('champions');
-        if (!champion) {
-            championsDiv.innerHTML = '<p>No champion hired yet.</p>';
-            this.hasChampion = false;
-            this.viewManager.setHasChampion(false);
-            return;
-        }
+		const championsDiv = document.getElementById('champions');
+		if (!champion) {
+			championsDiv.innerHTML = '<p>No champion hired yet.</p>';
+			this.hasChampion = false;
+			this.viewManager.setHasChampion(false);
+			return;
+		}
 
 		this.hasChampion = true;
-        this.viewManager.setHasChampion(true);
+		this.viewManager.setHasChampion(true);
 
-        championsDiv.innerHTML = `
-            <div class="champion-stats" data-champion-id="${champion._id}">
-                <h4>${this.escapeHtml(champion.name)}</h4>
-                <div class="stat-group">
-                    <h5>Physical Attributes</h5>
-                    <p>Strength: ${champion.physical.strength}</p>
-                    <p>Agility: ${champion.physical.agility}</p>
-                    <p>Hardiness: ${champion.physical.hardiness}</p>
-                    <p>Stamina: ${champion.physical.stamina}</p>
-                </div>
-                <div class="stat-group">
-                    <h5>Mental Attributes</h5>
-                    <p>Intelligence: ${champion.mental.intelligence}</p>
-                    <p>Unarmed Skill: ${champion.mental.unarmedSkill}</p>
-                    <p>Weapon Skill: ${champion.mental.weaponSkill}</p>
-                    <p>Survival Skill: ${champion.mental.survivalSkill}</p>
-                </div>
-                <p class="champion-status">Status: ${champion.status}</p>
-            </div>
-        `;
-    }
+		championsDiv.innerHTML = `
+			<div class="champion-stats" data-champion-id="${champion._id}">
+				<h4>${this.escapeHtml(champion.name)} (Level ${champion.level})</h4>
+				<div class="stat-group">
+					<h5>Physical Attributes</h5>
+					<p>Strength: ${champion.physical.strength.current}</p>
+					<p>Agility: ${champion.physical.agility.current}</p>
+					<p>Hardiness: ${champion.physical.hardiness.current}</p>
+					<p>Stamina: ${champion.physical.stamina.current}</p>
+				</div>
+				<div class="stat-group">
+					<h5>Mental Attributes</h5>
+					<p>Intelligence: ${champion.mental.intelligence.current}</p>
+					<p>Unarmed Skill: ${champion.mental.unarmedSkill.current}</p>
+					<p>Weapon Skill: ${champion.mental.weaponSkill.current}</p>
+					<p>Survival Skill: ${champion.mental.survivalSkill.current}</p>
+				</div>
+				<p class="champion-status">Status: ${champion.status}</p>
+			</div>
+		`;
+	}
 
     updateChampionSelection(champion) {
 		console.log('Updating champion selection with:', champion);
@@ -399,23 +404,25 @@ class GameClient {
 			<div class="potential-champion" data-temp-champion-id="${champion.tempId}">
 				<div class="stat-group">
 					<h4>Physical Attributes:</h4>
-					<p>Strength: ${champion.physical.strength}</p>
-					<p>Agility: ${champion.physical.agility}</p>
-					<p>Hardiness: ${champion.physical.hardiness}</p>
-					<p>Stamina: ${champion.physical.stamina}</p>
+					<p>Strength: ${champion.physical.strength.current}</p>
+					<p>Agility: ${champion.physical.agility.current}</p>
+					<p>Hardiness: ${champion.physical.hardiness.current}</p>
+					<p>Stamina: ${champion.physical.stamina.current}</p>
 				</div>
 				<div class="stat-group">
 					<h4>Mental Attributes:</h4>
-					<p>Intelligence: ${champion.mental.intelligence}</p>
-					<p>Unarmed Skill: ${champion.mental.unarmedSkill}</p>
-					<p>Weapon Skill: ${champion.mental.weaponSkill}</p>
-					<p>Survival Skill: ${champion.mental.survivalSkill}</p>
+					<p>Intelligence: ${champion.mental.intelligence.current}</p>
+					<p>Unarmed Skill: ${champion.mental.unarmedSkill.current}</p>
+					<p>Weapon Skill: ${champion.mental.weaponSkill.current}</p>
+					<p>Survival Skill: ${champion.mental.survivalSkill.current}</p>
 				</div>
 			</div>
 		`;
 
 		// Set up the hire button event listener
-		const hireButton = document.getElementById('hire-champion');
+		const modal = document.getElementById('champion-selection');
+		const hireButton = modal.querySelector('[data-action="hire-champion"]');
+		
 		if (hireButton) {
 			// Remove existing listeners
 			const newHireButton = hireButton.cloneNode(true);
@@ -431,17 +438,11 @@ class GameClient {
 				}
 			});
 		} else {
-			console.error('Hire button not found');
+			console.error('Hire button not found in modal');
 		}
-		
+
 		// Show the modal
-		const modal = document.getElementById('champion-selection');
-		if (modal) {
-			modal.style.display = 'block';
-		} else {
-			console.error('Champion selection modal not found');
-		}
-			
+		modal.style.display = 'block';
 	}
 
     showTrainingTimer(champion) {

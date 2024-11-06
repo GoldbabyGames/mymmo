@@ -32,10 +32,10 @@ const OutfitSchema = new mongoose.Schema({
     },
     structures: {
         trainingFacility: {
-            level: { type: Number, default: 1, min: 1 }
+            level: { type: Number, default: 1, min: 1, max: 10 }
         },
         library: {
-            level: { type: Number, default: 1, min: 1 }
+            level: { type: Number, default: 1, min: 1, max: 10 }
         }
     },
     createdAt: {

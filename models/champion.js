@@ -1,6 +1,12 @@
 // models/champion.js
 const mongoose = require('mongoose');
 
+// Define a schema for a stat that has both current and potential values
+const StatSchema = new mongoose.Schema({
+    current: { type: Number, min: 1, max: 100, required: true },
+    potential: { type: Number, min: 1, max: 100, required: true }
+});
+
 const ChampionSchema = new mongoose.Schema({
     outfitId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -11,17 +17,23 @@ const ChampionSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    level: {
+        type: Number,
+        required: true,
+        min: 1,
+        max: 10
+    },
     physical: {
-        strength: { type: Number, min: 0, max: 100 },
-        agility: { type: Number, min: 0, max: 100 },
-        hardiness: { type: Number, min: 0, max: 100 },
-        stamina: { type: Number, min: 0, max: 100 }
+        strength: StatSchema,
+        agility: StatSchema,
+        hardiness: StatSchema,
+        stamina: StatSchema
     },
     mental: {
-        intelligence: { type: Number, min: 0, max: 100 },
-        unarmedSkill: { type: Number, min: 0, max: 100 },
-        weaponSkill: { type: Number, min: 0, max: 100 },
-        survivalSkill: { type: Number, min: 0, max: 100 }
+        intelligence: StatSchema,
+        unarmedSkill: StatSchema,
+        weaponSkill: StatSchema,
+        survivalSkill: StatSchema
     },
     status: {
         type: String,
