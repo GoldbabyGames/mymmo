@@ -9,19 +9,31 @@ function initializeGameSockets(io) {
     io.on('connection', async (socket) => {
 		const playerId = socket.request.session.playerId;
 		console.log('Player connected:', socket.id);
+		// Use handshake.query instead of request.query
+        const isTestSession = socket.handshake.query.testSession;
+		
+		console.log('Player connected:', {
+            socketId: socket.id,
+            playerId: playerId,
+            isTestSession: isTestSession
+        });
+
 
 		// Initial state check when player connects
         socket.on('check-initial-state', async () => {
             try {
-                // Use the updated getOutfitByPlayerId that populates the champion
-                const outfit = await GameController.getOutfitByPlayerId(playerId);
-                if (outfit) {
-                    console.log('Existing outfit found for player:', playerId);
-                    // This will now include the populated champion if it exists
-                    socket.emit('load-existing-outfit', outfit);
-                } else {
-                    console.log('No existing outfit found for player:', playerId);
+                if (isTestSession) {
+                    console.log('Test session - showing outfit creation');
                     socket.emit('show-outfit-creation');
+                } else {
+                    const outfit = await GameController.getOutfitByPlayerId(playerId);
+                    if (outfit) {
+                        console.log('Existing outfit found for player:', playerId);
+                        socket.emit('load-existing-outfit', outfit);
+                    } else {
+                        console.log('No existing outfit found for player:', playerId);
+                        socket.emit('show-outfit-creation');
+                    }
                 }
             } catch (error) {
                 console.error('Error checking initial state:', error);
@@ -98,33 +110,43 @@ function initializeGameSockets(io) {
 
 		// Champion hiring handler - updated to handle single champion
         socket.on('hire-champion', async (data) => {
-            console.log('Hire champion request received:', data);
-            
-            try {
-                if (!data.outfitId || !data.tempChampionId) {
-                    throw new Error('Missing required hire parameters');
-                }
+			console.log('Hire champion request received:', data);
+			
+			try {
+				if (!data.outfitId || !data.tempChampionId) {
+					throw new Error('Missing required hire parameters');
+				}
 
-                const result = await GameController.hireChampion(
-                    data.outfitId,
-                    data.tempChampionId
-                );
+				const result = await GameController.hireChampion(
+					data.outfitId,
+					data.tempChampionId,
+					data.replaceExisting || false
+				);
 
-                // Emit success event with updated data including populated champion
-                socket.emit('champion-hired', {
-                    champion: result.champion,
-                    outfit: result.outfit  // This now includes the populated champion reference
-                });
-                
-                socket.emit('log-entry', {
-                    message: `Hired ${result.champion.name} for ${BASE_CHAMPION_COST} gold`,
-                    type: 'success'
-                });
+				// Emit success event with updated data
+				socket.emit('champion-hired', {
+					champion: result.champion,
+					outfit: result.outfit
+				});
+				
+				// Add log entries for the action
+				socket.emit('log-entry', {
+					message: `Hired ${result.champion.name} for ${result.champion.hireCost} gold`,
+					type: 'success'
+				});
 
-            } catch (error) {
-                socket.emit('hire-failed', { message: error.message });
-            }
-        });
+				if (data.replaceExisting) {
+					socket.emit('log-entry', {
+						message: 'Previous champion has been dismissed',
+						type: 'info'
+					});
+				}
+
+			} catch (error) {
+				console.error('Champion hire failed:', error);
+				socket.emit('hire-failed', { message: error.message });
+			}
+		});
 
 
         socket.on('train-champion', async (data) => {

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Colyseus Debug Test</title>
+    <!-- Include Colyseus client FIRST -->
+    <script src="https://unpkg.com/colyseus.js@^0.15.0/dist/colyseus.js"></script>
+    <style>
+        .connection-status {
+            margin: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background: #f0f0f0;
+        }
+        .log-container {
+            margin: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            height: 300px;
+            overflow-y: auto;
+            background: #f8f8f8;
+            font-family: monospace;
+        }
+        .log-entry {
+            margin: 5px 0;
+        }
+        .log-error {
+            color: red;
+        }
+        button {
+            margin: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+        .debug-info {
+            margin: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-info">
+        <h3>Debug Information</h3>
+        <p>Colyseus Version: <script>document.write(Colyseus.version)</script></p>
+        <p>WebSocket URL: ws://localhost:2567</p>
+        <p>Connection Status: <span id="ws-status">Checking...</span></p>
+    </div>
+    
+    <div class="connection-status" id="status">Status: Not Connected</div>
+    
+    <button id="testButton">Connect Client 1</button>
+    <button id="testButton2">Connect Client 2</button>
+    
+    <div class="log-container" id="logContainer"></div>
+
+    <!-- Include our test client code AFTER Colyseus -->
+    <script src="/js/test-colyseus-client.js"></script>
+
+    <script>
+        // Check WebSocket connection status
+        const wsStatus = document.getElementById('ws-status');
+        const ws = new WebSocket('ws://localhost:2567');
+        ws.onopen = () => {
+            wsStatus.textContent = 'Connected';
+            wsStatus.style.color = 'green';
+            ws.close();
+        };
+        ws.onerror = () => {
+            wsStatus.textContent = 'Failed to connect';
+            wsStatus.style.color = 'red';
+        };
+    </script>
+</body>
+</html>

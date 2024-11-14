@@ -4,6 +4,7 @@ class ViewManager {
         this.gameClient = gameClient;
         this.hasChampion = false;
         this.activeTab = 'management'; // Default tab
+		this.arenaRoot = null; // Add this line to store React root
         this.tabs = [
             'management',
             'champion',
@@ -13,9 +14,18 @@ class ViewManager {
             'arena'
         ];
 		
+		
+		// Add these diagnostic logs
+		console.log('Checking arena DOM structure...');
+		console.log('Queue screen:', document.getElementById('arena-queue-screen'));
+		console.log('Match screen:', document.getElementById('arena-match-screen'));
+		
         this.setupEventListeners();
         this.updateUpgradeButtons();
         this.setupChampionEventListeners();
+		
+		this.arenaQueueStatus = 'idle'; 
+        this.setupArenaEventListeners(); 
     }
 
 	// Add new method to handle initial state setup
@@ -388,6 +398,202 @@ class ViewManager {
             }
         }
     }
+	
+	setupArenaEventListeners() {
+		const queueButton = document.querySelector('[data-action="queue-arena"]');
+		
+		if (queueButton) {
+			const newButton = queueButton.cloneNode(true);
+			queueButton.parentNode.replaceChild(newButton, queueButton);
+			
+			newButton.addEventListener('click', async (e) => {
+				e.preventDefault();
+				
+				if (!this.gameClient.currentChampion) {
+					this.gameClient.showError('You need a champion to enter the arena');
+					return;
+				}
+
+				try {
+					// Clean champion data here before passing to Colyseus
+					const cleanChampionData = {
+						_id: this.gameClient.currentChampion._id,
+						name: this.gameClient.currentChampion.name,
+						physical: {
+							strength: { current: this.gameClient.currentChampion.physical.strength.current },
+							agility: { current: this.gameClient.currentChampion.physical.agility.current },
+							hardiness: { current: this.gameClient.currentChampion.physical.hardiness.current },
+							stamina: { current: this.gameClient.currentChampion.physical.stamina.current }
+						},
+						mental: {
+							intelligence: { current: this.gameClient.currentChampion.mental.intelligence.current },
+							unarmedSkill: { current: this.gameClient.currentChampion.mental.unarmedSkill.current },
+							weaponSkill: { current: this.gameClient.currentChampion.mental.weaponSkill.current },
+							survivalSkill: { current: this.gameClient.currentChampion.mental.survivalSkill.current }
+						}
+					};
+
+					console.log('Cleaned champion data:', cleanChampionData);
+					const room = await window.colyseusClient.joinArenaMatch(cleanChampionData);
+					this.showArenaMatch(room, cleanChampionData);
+				} catch (error) {
+					console.error('Error joining arena:', error);
+					this.gameClient.showError('Failed to join arena: ' + error.message);
+				}
+			});
+		}
+	}
+
+
+	showArenaMatch(room) {
+		console.log('Showing arena match interface');
+		
+		const queueScreen = document.getElementById('arena-queue-screen');
+		const matchScreen = document.getElementById('arena-match-screen');
+		
+		if (!queueScreen || !matchScreen) {
+			console.error('Arena screens not found:', { queueScreen, matchScreen });
+			return;
+		}
+
+		// Add debug info here, before attempting to render
+		console.log('Debug info:', {
+			reactLoaded: !!window.React,
+			reactDOMLoaded: !!window.ReactDOM,
+			arenaInterfaceLoaded: !!window.ArenaInterface,
+			matchScreen: !!document.getElementById('arena-match-screen')
+		});
+
+		// Verify React and ReactDOM are available
+		if (!window.React || !window.ReactDOM) {
+			console.error('React or ReactDOM not loaded');
+			return;
+		}
+
+		// Verify ArenaInterface component is available
+		if (!window.ArenaInterface) {
+			console.error('ArenaInterface component not loaded');
+			return;
+		}
+
+		try {
+			queueScreen.style.display = 'none';
+			matchScreen.style.display = 'block';
+
+			// Create root if it doesn't exist
+			if (!this.arenaRoot) {
+				console.log('Creating new ReactDOM root');
+				this.arenaRoot = ReactDOM.createRoot(matchScreen);
+			}
+
+			// Render the component
+			console.log('Rendering ArenaInterface component');
+			this.arenaRoot.render(
+				React.createElement(window.ArenaInterface, {
+					room: room,
+					championData: this.gameClient.currentChampion
+				})
+			);
+
+			console.log('ArenaInterface component rendered successfully');
+		} catch (error) {
+			console.error('Error rendering ArenaInterface:', error);
+			console.error(error.stack); // Add stack trace
+			this.gameClient.showError('Failed to initialize arena interface');
+		}
+	}
+
+
+	hideArenaMatch() {
+		console.log('Hiding arena match interface');
+		const queueScreen = document.getElementById('arena-queue-screen');
+		const matchScreen = document.getElementById('arena-match-screen');
+		
+		if (queueScreen && matchScreen) {
+			matchScreen.style.display = 'none';
+			queueScreen.style.display = 'block';
+			
+			if (this.arenaRoot) {
+				this.arenaRoot.unmount();
+				this.arenaRoot = null;
+			}
+		}
+	}
+
+
+    updateArenaTab() {
+    console.log('Updating arena tab');
+    
+    if (!this.gameClient.hasChampion) {
+        document.getElementById('arena-queue-screen').innerHTML = `
+            <div class="arena-status">
+                <p class="warning">You need a champion to enter the arena.</p>
+            </div>`;
+        return;
+    }
+
+    // Only setup event listeners once
+    if (!this.arenaListenersInitialized) {
+        this.setupArenaEventListeners();
+        this.arenaListenersInitialized = true;
+    }
+}
+
+
+    updateArenaQueueStatus(status) {
+        console.log('Updating arena queue status:', status);
+        this.arenaQueueStatus = status;
+        
+        // Only update UI if arena tab is active
+        if (this.activeTab === 'arena') {
+            this.updateArenaTab();
+        }
+
+        // Update queue button if it exists
+        const queueButton = document.querySelector('[data-action="queue-arena"]');
+        if (queueButton) {
+            queueButton.disabled = (status !== 'idle');
+            queueButton.textContent = this.getQueueButtonText();
+        }
+    }
+
+    getQueueStatusDisplay() {
+        const statusMessages = {
+            idle: 'Ready to enter arena',
+            queued: `
+                <div class="queue-status">
+                    <p>Searching for opponents...</p>
+                    <div class="loading-spinner"></div>
+                </div>`,
+            matched: `
+                <div class="queue-status success">
+                    <p>Match found! Preparing arena...</p>
+                </div>`,
+            starting: `
+                <div class="queue-status success">
+                    <p>Match is starting!</p>
+                </div>`,
+            expired: `
+                <div class="queue-status warning">
+                    <p>Queue expired. Please try again.</p>
+                </div>`
+        };
+
+        return statusMessages[this.arenaQueueStatus] || statusMessages.idle;
+    }
+
+    getQueueButtonText() {
+        const buttonText = {
+            idle: 'Enter Arena Queue',
+            queued: 'In Queue...',
+            matched: 'Match Found!',
+            starting: 'Starting...',
+            expired: 'Enter Arena Queue'
+        };
+
+        return buttonText[this.arenaQueueStatus] || 'Enter Arena Queue';
+    }
+
 }
 
 // Make ViewManager available globally

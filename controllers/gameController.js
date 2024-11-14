@@ -111,8 +111,9 @@ class GameController {
 	// - Implement MongoDB replica set for transaction support
 	// - Add proper atomic operations
 	// - Consider implementing compensation/rollback logic for failed operations
-	static async hireChampion(outfitId, tempChampionId) {
-		console.log('Attempting to hire champion:', { outfitId, tempChampionId });
+	// In GameController class, update the hireChampion method
+	static async hireChampion(outfitId, tempChampionId, replaceExisting = false) {
+		console.log('Hiring champion:', { outfitId, tempChampionId, replaceExisting });
 		
 		try {
 			// Get the pending champion data
@@ -121,75 +122,71 @@ class GameController {
 				throw new Error('Champion not found or expired. Please generate a new champion.');
 			}
 
-			// First, verify outfit exists and has enough gold and no champion
-			const outfit = await Outfit.findOne({
-				_id: outfitId,
-				gold: { $gte: BASE_CHAMPION_COST },
-				champion: { $exists: false }
-			});
-
+			// Find the outfit and populate champion
+			const outfit = await Outfit.findById(outfitId).populate('champion');
 			if (!outfit) {
-				// Check specific failure conditions to provide better error messages
-				const existingOutfit = await Outfit.findById(outfitId);
-				if (!existingOutfit) {
-					throw new Error('Outfit not found');
-				}
-				if (existingOutfit.gold < BASE_CHAMPION_COST) {
-					throw new Error(`Insufficient gold. Hiring costs ${BASE_CHAMPION_COST} gold.`);
-				}
-				if (existingOutfit.champion) {
-					throw new Error('Outfit already has a champion. Dismiss current champion before hiring a new one.');
-				}
+				throw new Error('Outfit not found');
 			}
 
-			// Create new champion
-			const champion = new Champion({
-				outfitId,
-				...pendingChampion.championData,
-				status: 'available'
-			});
+			// Calculate hire cost
+			const hireCost = pendingChampion.championData.hireCost;
 
-			// Save the champion first
-			const savedChampion = await champion.save();
-
-			// Atomically update the outfit with new gold amount and champion reference
-			const updatedOutfit = await Outfit.findOneAndUpdate(
-				{
-					_id: outfitId,
-					gold: { $gte: BASE_CHAMPION_COST },
-					champion: { $exists: false }
-				},
-				{
-					$inc: { gold: -BASE_CHAMPION_COST },
-					$set: { champion: savedChampion._id }
-				},
-				{
-					new: true,
-					runValidators: true
-				}
-			);
-
-			// If outfit update failed, roll back champion creation
-			if (!updatedOutfit) {
-				await Champion.findByIdAndDelete(savedChampion._id);
-				throw new Error('Failed to update outfit. Another operation may have modified it.');
+			// Verify gold amount
+			if (outfit.gold < hireCost) {
+				throw new Error(`Insufficient gold. Hiring costs ${hireCost} gold.`);
 			}
 
-			// Remove the pending champion from temporary storage
-			GameController.pendingChampions.delete(tempChampionId);
+			// Handle existing champion check
+			if (outfit.champion && !replaceExisting) {
+				throw new Error('Outfit already has a champion. Dismiss current champion before hiring a new one.');
+			}
 
-			console.log('Champion hired successfully:', {
-				championId: savedChampion._id,
-				outfitId: outfit._id,
-				remainingGold: updatedOutfit.gold
-			});
+			try {
+				// If replacing, remove old champion first
+				if (outfit.champion) {
+					console.log('Removing existing champion:', outfit.champion._id);
+					await Champion.findByIdAndDelete(outfit.champion._id);
+				}
 
-			// Return populated outfit
-			const populatedOutfit = await Outfit.findById(outfitId).populate('champion');
-			return { 
-				champion: savedChampion,
-				outfit: populatedOutfit
-			};
+				// Create new champion
+				const champion = new Champion({
+					outfitId,
+					...pendingChampion.championData,
+					status: 'available'
+				});
+				
+				await champion.save();
+
+				// Update outfit atomically
+				const updatedOutfit = await Outfit.findOneAndUpdate(
+					{ _id: outfitId },
+					{ 
+						$set: { champion: champion._id },
+						$inc: { gold: -hireCost }
+					},
+					{ new: true }
+				).populate('champion');
+
+				if (!updatedOutfit) {
+					// Rollback - remove the champion if outfit update failed
+					await Champion.findByIdAndDelete(champion._id);
+					throw new Error('Failed to update outfit.');
+				}
+
+				// Clean up pending champion
+				GameController.pendingChampions.delete(tempChampionId);
+
+				return {
+					champion,
+					outfit: updatedOutfit
+				};
+
+			} catch (error) {
+				console.error('Error during champion hire process:', error);
+				// If we get here, something went wrong during the hire process
+				// We'll let the error propagate up after logging
+				throw new Error('Failed to complete champion hire process. Please try again.');
+			}
 
 		} catch (error) {
 			console.error('Error in hireChampion:', error);

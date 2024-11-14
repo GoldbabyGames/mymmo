@@ -5,7 +5,9 @@ class GameClient {
         this.socket = window.gameSocket;
 		this.hasChampion = false;
 		this.currentChampion = null; // Add this to track current champion
+		this.pendingChampion = null;
 		this.currentOutfit = null;  // Initialize outfit data to null
+		this.modalContainer = null;
         
         if (!this.socket) {
             console.error('Socket.IO not initialized!');
@@ -21,6 +23,7 @@ class GameClient {
             console.log('First time initialization of GameClient');
             this.setupSocketListeners();
             this.setupChampionSocketListeners();
+			this.setupArenaListeners(); 
             this.initializeFormHandler();
             this.checkInitialState();
             this.initialized = true;
@@ -151,8 +154,10 @@ class GameClient {
         this.socket.on('champion-generated', (champion) => {
 			console.log('Champion generated:', champion);
 			try {
-				this.updateChampionSelection(champion);
-				this.viewManager.showChampionSelection();
+				// Champion data from server should already include hireCost based on level
+			this.pendingChampion = champion;
+			this.updateChampionSelection(champion);
+			this.viewManager.showChampionSelection();
 			} catch (error) {
 				console.error('Error updating champion selection:', error);
 				this.showError('Failed to display champion');
@@ -160,20 +165,48 @@ class GameClient {
 		});
 
         this.socket.on('champion-hired', (data) => {
-            console.log('Champion hired:', data);
-            const { champion, outfit } = data;
-            this.currentChampion = champion;
-            this.hasChampion = true;
-            this.updateChampionDisplay(champion);
-            this.updateOutfitDisplay(outfit);
-            this.viewManager.hideChampionSelection();
-        });
-
-        this.socket.on('hire-failed', (error) => {
-            console.error('Hire failed:', error);
-            this.showError(error.message);
-        });
+			console.log('Champion hired:', data);
+			const { champion, outfit } = data;
+			
+			// Update client state
+			this.currentChampion = champion;
+			this.hasChampion = true;
+			this.pendingChampion = null; // Clear pending champion
+			this.updateChampionDisplay(champion);
+			this.updateOutfitDisplay(outfit);
+			
+			// Clean up modal if it exists
+			if (this.modalContainer) {
+				ReactDOM.unmountComponentAtNode(this.modalContainer);
+			}
+			
+			this.viewManager.hideChampionSelection(); 
+		});
     }
+
+
+	setupArenaListeners() {
+		this.socket.on('queue-confirmed', (data) => {
+			console.log('Successfully queued for arena:', data);
+		});
+
+		this.socket.on('match-found', (data) => {
+			console.log('Match found! Room ID:', data.roomId);
+			// Join the arena room
+			this.socket.emit('join-arena', data);
+		});
+
+		this.socket.on('match-start', (data) => {
+			console.log('Match is starting!', data);
+		});
+
+		this.socket.on('arena-error', (error) => {
+			console.error('Arena error:', error);
+			this.showError(error.message);
+		});
+	}
+
+
 
     findNewChampion() {
 		console.log('Requesting new champion generation');
@@ -201,13 +234,58 @@ class GameClient {
 			return;
 		}
 
-		this.socket.emit('hire-champion', {
-			outfitId: this.currentOutfitId,
-			tempChampionId: tempChampionId
-		});
+		// If there's already a champion, show confirmation modal
+		if (this.hasChampion && this.currentChampion) {
+			const newChampion = this.getPendingChampionData(tempChampionId);
+			if (!newChampion) {
+				this.showError('Error loading champion data');
+				return;
+			}
+
+			// Use the new modal system
+			window.showChampionModal({
+				currentChampion: this.currentChampion,
+				newChampion: newChampion,
+				hireCost: newChampion.hireCost,
+				onConfirm: () => this.confirmHireChampion(tempChampionId),
+				onCancel: () => this.cancelChampionReplacement()
+			});
+		} else {
+			// No existing champion, proceed with hire directly
+			this.confirmHireChampion(tempChampionId);
+		}
 	}
 	
-	
+	confirmHireChampion(tempChampionId) {
+		console.log('Confirming champion hire:', tempChampionId);
+		if (!this.currentOutfitId || !this.socket?.connected) {
+			console.error('Invalid game state or connection');
+			this.showError('Connection error or invalid game state');
+			return;
+		}
+
+		this.socket.emit('hire-champion', {
+			outfitId: this.currentOutfitId,
+			tempChampionId: tempChampionId,
+			replaceExisting: this.hasChampion
+		});
+	}
+
+	cancelChampionReplacement() {
+		console.log('Cancelling champion replacement');
+		// No cleanup needed as it's handled by the modal system
+	}
+
+
+	// Simplified getPendingChampionData that uses stored data
+	getPendingChampionData(tempChampionId) {
+		console.log('Getting pending champion data for:', tempChampionId);
+		if (this.pendingChampion && this.pendingChampion.tempId === tempChampionId) {
+			return this.pendingChampion;  // This should include all champion data including hireCost
+		}
+		console.error('Pending champion not found:', tempChampionId);
+		return null;
+	}
 
     initializeFormHandler() {
     console.log('GameClient: Setting up form handler');
@@ -467,6 +545,7 @@ class GameClient {
             }
         }, 1000);
     }
+
 
 	getCurrentOutfit() {
 		console.log('Getting current outfit:', this.currentOutfit);

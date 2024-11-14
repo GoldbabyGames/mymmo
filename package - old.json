@@ -1,0 +1,27 @@
+{
+  "name": "my-mmo",
+  "version": "1.0.0",
+  "main": "game.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@colyseus/schema": "^2.0.36",
+    "@colyseus/ws-transport": "^0.15.2",
+    "@radix-ui/react-alert-dialog": "^1.0.5",
+    "colyseus": "^0.15.17",
+    "connect-mongo": "^5.1.0",
+    "express": "^4.21.1",
+    "express-session": "^1.18.1",
+    "mongodb": "^6.10.0",
+    "mongoose": "^8.7.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "socket.io": "^4.8.1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}

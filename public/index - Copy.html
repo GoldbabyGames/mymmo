@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arena Champions</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Outfit Creation Screen - Hidden by default -->
+        <div id="outfit-creation" class="screen" style="display: none;">
+            <h1>Arena Champions</h1>
+			
+            <h2>Create Your Fighting Outfit</h2>
+			
+            <p>The year is 2077. In a world ravaged by nuclear war, underground
+            fighting rings have become the new centers of power...</p>
+			
+            <form id="create-outfit-form">
+                <label for="outfit-name">Name your fighting outfit:</label>
+                <input type="text" id="outfit-name" name="outfit-name" required>
+                <div id="name-error" class="error-text"></div>
+                <button type="submit" id="create-outfit-btn">Create Outfit</button>
+            </form>
+        </div>
+
+        <!-- Game Area Screen - Hidden by default -->
+        <div id="game-area" class="screen" style="display: none;">
+            <div id="outfit-info" class="status-bar"></div>
+
+            <div class="tab-container">
+                <div class="tab-buttons">
+                    <button class="tab-button active" data-tab="management">Overview</button>
+                    <button class="tab-button" data-tab="champion">Champion</button>
+					<button class="tab-button" data-tab="training-ground">Training</button>
+					<button class="tab-button" data-tab="research">Research</button>
+					<button class="tab-button" data-tab="missions">Missions</button>
+                    <button class="tab-button" data-tab="arena">Arena</button>
+                </div>
+
+                <div id="management" class="tab-content" style="display: block;">
+                    <div class="management-grid">
+                        <div id="structures" class="structure-list">
+                            <!-- Structures will be populated by JavaScript -->
+                        </div>
+
+                        <div class="action-buttons">
+                            <button data-action="upgrade-training" class="button">Upgrade Training Ground</button>
+                            <button data-action="upgrade-library" class="button">Upgrade Research Facility</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="champion" class="tab-content">
+                    <div id="champions" class="champion-display">
+                        <!-- Champion info will be populated by JavaScript -->
+                    </div>
+
+                    <div class="champion-actions">
+                        <button data-action="find-champion" class="button">Find New Champion</button>
+
+                        <div class="training-buttons">
+                            <h4>Train Attributes:</h4>
+                            <button data-action="train-strength" class="button">Train Strength</button>
+                            <button data-action="train-agility" class="button">Train Agility</button>
+                            <button data-action="train-hardiness" class="button">Train Hardiness</button>
+                            <button data-action="train-stamina" class="button">Train Stamina</button>
+                            <button data-action="train-intelligence" class="button">Train Intelligence</button>
+                            <button data-action="train-unarmed" class="button">Train Unarmed</button>
+                            <button data-action="train-weapons" class="button">Train Weapons</button>
+                            <button data-action="train-survival" class="button">Train Survival</button>
+                        </div>
+                    </div>
+                </div>
+
+				<!-- additional tab content containers -->
+				<div id="training-ground" class="tab-content">
+					<div class="training-ground-content">
+						<h2>Training Ground</h2>
+						<div class="placeholder">Training ground functionality coming soon...</div>
+					</div>
+				</div>
+
+				<div id="research" class="tab-content">
+					<div class="research-content">
+						<h2>Research</h2>
+						<div class="placeholder">Research functionality coming soon...</div>
+					</div>
+				</div>
+
+
+				<div id="missions" class="tab-content">
+					<div class="missions-content">
+						<h2>Missions</h2>
+						<div class="placeholder">Missions functionality coming soon...</div>
+					</div>
+				</div>
+				
+
+                <div id="arena" class="tab-content">
+					<div id="arena-queue-screen" class="arena-screen">
+						<h3>Arena Queue</h3>
+						<div class="arena-actions">
+							<button class="button" data-action="queue-arena">Enter Arena Queue</button>
+						</div>
+					</div>
+					
+					<!-- This div will hold our React component when a match is found -->
+					<div id="arena-match-screen" class="arena-screen" style="display: none;">
+						<!-- React will render here -->
+					</div>
+				</div>
+            </div>
+        </div>
+
+        <!-- Champion Selection Modal - Hidden by default -->
+        <div id="champion-selection" class="modal" style="display: none;">
+            <div class="modal-content">
+                <h2>Available Champion</h2>
+                <div id="champion-details" class="champion-details">
+                    <!-- Champion details will be populated by JavaScript -->
+                </div>
+                
+                <div class="modal-actions">
+                    <button data-action="hire-champion" class="button">Hire Champion (200 Gold)</button>
+                    <button data-action="find-another" class="button">Find Another Champion</button>
+                    <button data-action="cancel-champion" class="button">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Log -->
+        <div id="game-log" class="log-container">
+            <h3>Activity Log</h3>
+            <div id="log-entries" class="log-entries"></div>
+        </div>
+    </div>
+
+    <!-- Socket.IO script -->
+    <script src="/socket.io/socket.io.js"></script>
+
+    <!-- Game scripts -->
+    <script>
+        // DOM Ready handler
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM loaded');
+            
+            // Only initialize if no gameClient exists
+            if (!window.gameClient) {
+                // Make sure we don't create a new socket if one exists
+                if (!window.gameSocket) {
+                    console.log('Initializing socket connection...');
+                    window.gameSocket = io();
+                }
+                
+                console.log('Creating new GameClient instance');
+                window.gameClient = new GameClient();
+            }
+        });
+    </script>
+	
+	<!-- Base Dependencies -->
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+<script src="https://unpkg.com/colyseus.js@^0.15.0/dist/colyseus.js"></script>
+
+<!-- Add this debug script to verify React loading -->
+<script>
+    console.log('Dependencies loaded:', {
+        react: !!window.React,
+        reactDOM: !!window.ReactDOM,
+        babel: !!window.Babel,
+        colyseus: !!window.Colyseus
+    });
+</script>
+
+<!-- Game Components -->
+<script type="text/babel" data-type="module" src="/js/components/ArenaInterface.js"></script>
+
+<!-- Add this debug script after ArenaInterface -->
+<script>
+    console.log('Post-ArenaInterface load check:', {
+        arenaInterface: !!window.ArenaInterface
+    });
+</script>
+
+<!-- Rest of your game scripts -->
+<script src="/js/colyseusClient.js"></script>
+<script src="/js/ViewManager.js"></script>
+<script src="/js/GameClient.js"></script>
+<script src="/js/main.js"></script>
+
+</body>
+</html>

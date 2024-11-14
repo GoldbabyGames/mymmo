@@ -253,6 +253,80 @@ body {
     margin-top: 20px;
 }
 
+/* Champion Replacement Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.confirmation-modal {
+    background-color: var(--primary-color);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    max-width: 800px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    margin-bottom: 1.5rem;
+}
+
+.modal-header h2 {
+    color: var(--accent-color);
+    margin: 0;
+}
+
+.alert.warning {
+    background-color: rgba(255, 165, 0, 0.1);
+    border: 1px solid orange;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border-radius: var(--border-radius);
+}
+
+.champion-comparison {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.champion-card {
+    background-color: var(--secondary-color);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+}
+
+.champion-name {
+    color: var(--accent-color);
+    font-size: 1.1em;
+    margin: 0.5rem 0;
+}
+
+.hire-cost {
+    font-size: 1.2em;
+    color: var(--accent-color);
+    margin: 1rem 0;
+}
+
+/* Update existing modal-actions to handle both modals */
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
 /* Animations */
 @keyframes slideIn {
     from {
@@ -312,5 +386,15 @@ body {
 
     .training-buttons {
         grid-template-columns: 1fr;
+    }
+	
+	.champion-comparison {
+        grid-template-columns: 1fr;
+    }
+	
+	.confirmation-modal {
+        width: 95%;
+        margin: 10px;
+        max-height: 95vh;
     }
 }
