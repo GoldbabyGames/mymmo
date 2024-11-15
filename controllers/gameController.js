@@ -206,53 +206,6 @@ class GameController {
         }
     }
 
-
-    static async trainChampion(championId, attribute) {
-        try {
-            const champion = await Champion.findById(championId);
-            if (!champion) {
-                throw new Error('Champion not found');
-            }
-
-            const outfit = await Outfit.findById(champion.outfitId);
-            if (!outfit) {
-                throw new Error('Outfit not found');
-            }
-
-            if (champion.status !== 'available') {
-                throw new Error('Champion is not available for training');
-            }
-
-            if (outfit.gold < TRAINING_COST) {
-                throw new Error(`Insufficient gold. Training costs ${TRAINING_COST} gold.`);
-            }
-
-            // Update champion stats
-            if (champion.physical[attribute]) {
-                champion.physical[attribute] = Math.min(champion.physical[attribute] + 1, 100);
-            } else if (champion.mental[attribute]) {
-                champion.mental[attribute] = Math.min(champion.mental[attribute] + 1, 100);
-            } else {
-                throw new Error('Invalid attribute specified for training');
-            }
-
-            // Update status and gold
-            champion.status = 'training';
-            outfit.gold -= TRAINING_COST;
-
-            // Save both documents
-            await Promise.all([
-                champion.save(),
-                outfit.save()
-            ]);
-
-            return { champion, outfit };
-        } catch (error) {
-            console.error('Error training champion:', error);
-            throw error;
-        }
-    }
-
     static calculateBaseStats(outfitLevel) {
         const baseRange = {
             min: Math.max(10, (outfitLevel - 1) * 5),

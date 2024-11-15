@@ -174,9 +174,25 @@
 <!-- Colyseus -->
 <script src="https://unpkg.com/colyseus.js@^0.15.0/dist/colyseus.js"></script>
 
-<!-- Arena Interface - note: no type="text/babel" for this test -->
+<!-- React component scripts - note: no type="text/babel" -->
 <script src="/js/components/ArenaInterface.js"></script>
 <script src="/js/components/ChampionConfirmationModal.js"></script>
+<script src="/js/components/TrainingInterface.js"></script>
+
+<!-- Debug check for components -->
+<script>
+    console.log('Components loaded:', {
+        ArenaInterface: !!window.ArenaInterface,
+        ChampionConfirmationModal: !!window.ChampionConfirmationModal,
+        TrainingInterface: !!window.TrainingInterface,
+        componentTypes: {
+            ArenaInterface: typeof window.ArenaInterface,
+            ChampionConfirmationModal: typeof window.ChampionConfirmationModal,
+            TrainingInterface: typeof window.TrainingInterface
+        }
+    });
+</script>
+
 
 <!-- Debug check for Arena Interface -->
 <script>

@@ -244,11 +244,20 @@ class ViewManager {
 			const level = currentOutfit.structures.trainingFacility.level;
 			console.log('Training Facility Level:', level);
 			const content = trainingGround.querySelector('.training-ground-content');
+			
 			if (content) {
-				content.innerHTML = `
-					<h2>Training Ground: Level ${level}</h2>
-					<div class="placeholder">Training ground functionality coming soon...</div>
-				`;
+				// Create root if it doesn't exist
+				if (!this.trainingRoot) {
+					this.trainingRoot = ReactDOM.createRoot(content);
+				}
+				
+				// Render the training interface with the facility level
+				console.log('Rendering TrainingInterface with level:', level);
+				this.trainingRoot.render(
+					React.createElement(window.TrainingInterface, {
+						facilityLevel: level
+					})
+				);
 			}
 		}
 		console.log('Updating training ground tab - END');

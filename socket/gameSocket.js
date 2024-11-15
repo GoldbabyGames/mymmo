@@ -1,6 +1,8 @@
 // socket/gameSocket.js
 const mongoose = require('mongoose');
 const GameController = require('../controllers/gameController');
+const Champion = require('../models/champion');  // Add this
+const TrainingManager = require('../utils/TrainingManager');  // Add this
 const { BASE_CHAMPION_COST } = require('../config/gameConstants');
 
 function initializeGameSockets(io) {
@@ -148,15 +150,85 @@ function initializeGameSockets(io) {
 			}
 		});
 
+		socket.on('start-training', async (data) => {
+			console.log('Start training request received:', data);
+			
+			try {
+				// Get outfit first
+				const outfit = await GameController.getOutfitByPlayerId(playerId);
+				if (!outfit) {
+					throw new Error('Outfit not found');
+				}
 
-        socket.on('train-champion', async (data) => {
-            try {
-                const result = await GameController.trainChampion(data.championId, data.attribute);
-                socket.emit('training-started', result);
-            } catch (error) {
-                socket.emit('error', { message: error.message });
-            }
-        });
+				// Get champion using the outfit's champion reference
+				const champion = await Champion.findById(outfit.champion);
+				if (!champion) {
+					throw new Error('No champion found');
+				}
+				
+				console.log('Training request validation:', {
+					outfitId: outfit._id,
+					championId: champion._id,
+					championStatus: champion.status,
+					outfitGold: outfit.gold,
+					championLevel: champion.level
+				});
+
+				if (champion.status !== 'available') {
+					throw new Error('Champion is not available for training');
+				}
+
+				const trainingCost = champion.level * 100;
+				if (outfit.gold < trainingCost) {
+					throw new Error('Insufficient gold for training');
+				}
+
+				const result = await TrainingManager.startTraining(outfit, champion);
+				console.log('Training started successfully:', result);
+
+				socket.emit('training-started', {
+					champion: result.champion,
+					outfit: result.outfit,
+					endTime: result.trainingEndTime
+				});
+
+				// Set timeout to complete training
+				setTimeout(async () => {
+					try {
+						const trainingResult = await TrainingManager.completeTraining(champion);
+						console.log('Training completed:', trainingResult);
+						
+						socket.emit('training-complete', {
+							champion: trainingResult.champion,
+							improvements: trainingResult.improvements,
+							messages: trainingResult.messages
+						});
+					} catch (error) {
+						console.error('Error completing training:', error);
+						socket.emit('error', { message: 'Error completing training: ' + error.message });
+					}
+				}, TrainingManager.TRAINING_DURATION);
+
+			} catch (error) {
+				console.error('Training error:', error);
+				socket.emit('error', { message: error.message });
+			}
+		});
+       
+	   
+		socket.on('training-complete', async (data) => {
+			try {
+				const trainingResult = await TrainingManager.completeTraining(champion);
+				socket.emit('training-complete', {
+					champion: trainingResult.champion,
+					improvements: trainingResult.improvements,
+					messages: trainingResult.messages
+				});
+			} catch (error) {
+				socket.emit('error', { message: 'Error completing training: ' + error.message });
+			}
+		});
+
 
         socket.on('disconnect', () => {
             console.log('Player disconnected:', socket.id);
