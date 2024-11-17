@@ -3,14 +3,13 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (!window.gameSocket) {
         console.log('Initializing socket connection...');
-        window.gameSocket = io();
+        // Get test session parameter from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const testSession = urlParams.get('testSession');
         
-        window.gameSocket.on('connect', () => {
-            console.log('Socket connected:', window.gameSocket.id);
-        });
-
-        window.gameSocket.on('connect_error', (error) => {
-            console.error('Socket connection error:', error);
+        // Initialize socket with query parameter
+        window.gameSocket = io({
+            query: { testSession }
         });
     }
     

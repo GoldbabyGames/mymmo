@@ -9,23 +9,27 @@ function initializeGameSockets(io) {
 	console.log('Game socket initialization started');
 	
     io.on('connection', async (socket) => {
-		const playerId = socket.request.session.playerId;
-		console.log('Player connected:', socket.id);
-		// Use handshake.query instead of request.query
-        const isTestSession = socket.handshake.query.testSession;
-		
-		console.log('Player connected:', {
-            socketId: socket.id,
-            playerId: playerId,
-            isTestSession: isTestSession
-        });
+        const testSession = socket.request.session.isTestSession;
+        const playerId = socket.request.session.playerId;
 
+        if (testSession) {
+            console.log('Test session connected:', {
+                socketId: socket.id,
+                playerId,
+                testSession
+            });
+        } else {
+            console.log('Regular session connected:', {
+                socketId: socket.id,
+                playerId
+            });
+        }
 
-		// Initial state check when player connects
+        // Initial state check when player connects
         socket.on('check-initial-state', async () => {
             try {
-                if (isTestSession) {
-                    console.log('Test session - showing outfit creation');
+                if (testSession) {
+                    console.log(`Test session ${testSession} - showing outfit creation`);
                     socket.emit('show-outfit-creation');
                 } else {
                     const outfit = await GameController.getOutfitByPlayerId(playerId);
@@ -43,9 +47,14 @@ function initializeGameSockets(io) {
             }
         });
 
-
+        // Update create-outfit handler to support test sessions
         socket.on('create-outfit', async (data) => {
-            console.log('Create outfit request received:', data);
+            console.log('Create outfit request received:', {
+                name: data.name,
+                playerId,
+                isTestSession: testSession || 'none'
+            });
+            
             try {
                 const outfit = await GameController.createOutfit(playerId, data.name);
                 console.log('Outfit created successfully:', outfit._id);
@@ -54,6 +63,15 @@ function initializeGameSockets(io) {
                 console.error('Error creating outfit:', error);
                 socket.emit('error', { message: error.message });
             }
+        });
+
+        // Handle disconnect
+        socket.on('disconnect', () => {
+            console.log('Player disconnected:', {
+                socketId: socket.id,
+                playerId,
+                isTestSession: testSession || 'none'
+            });
         });
 
         //Structure upgrade handler
@@ -150,6 +168,23 @@ function initializeGameSockets(io) {
 			}
 		});
 
+		socket.on('fetch-champion-data', async (data) => {
+			console.log('Fetch champion data request received:', data);
+			try {
+				const outfit = await GameController.getOutfitByPlayerId(playerId);
+				if (outfit && outfit.champion) {
+					console.log('Sending fresh champion data to client');
+					socket.emit('champion-data-updated', outfit.champion);
+				} else {
+					socket.emit('champion-data-updated', null);
+				}
+			} catch (error) {
+				console.error('Error fetching champion data:', error);
+				socket.emit('error', { message: error.message });
+			}
+		});
+
+
 		socket.on('start-training', async (data) => {
 			console.log('Start training request received:', data);
 			
@@ -230,9 +265,6 @@ function initializeGameSockets(io) {
 		});
 
 
-        socket.on('disconnect', () => {
-            console.log('Player disconnected:', socket.id);
-        });
     });
 }
 

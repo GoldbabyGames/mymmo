@@ -134,9 +134,24 @@ body {
 .champion-status {
     padding: 5px 10px;
     border-radius: var(--border-radius);
-    background-color: var(--accent-color);
     display: inline-block;
 }
+
+.status-available {
+    background-color: var(--success-color);
+}
+
+.status-busy {
+    background-color: var(--error-color);
+}
+
+.loading {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-color);
+    font-style: italic;
+}
+
 
 /* Training System */
 #training-timer {
@@ -190,6 +205,43 @@ body {
     cursor: not-allowed;
     opacity: 0.7;
 }
+
+.training-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+    padding: 15px;
+    background-color: var(--secondary-color);
+    border-radius: var(--border-radius);
+}
+
+.training-ground-content .button {
+    background-color: var(--accent-color);
+    color: var(--text-color);
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background-color 0.3s, opacity 0.3s;
+    width: auto;
+    min-width: 200px;
+    margin: 8px;
+    text-align: center;
+}
+
+.training-ground-content .button:hover {
+    background-color: #2980b9;
+}
+
+.training-ground-content .button:disabled {
+    background-color: var(--secondary-color);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+
 
 // Add CSS styles for disabled upgrade buttons
 .disabled-upgrade {
@@ -384,9 +436,19 @@ body {
         flex-direction: column;
     }
 
+    .training-ground-content .button {
+        width: 100%;
+        margin: 4px 0;
+    }
+    
+    .training-actions {
+        flex-direction: column;
+    }
+    
     .training-buttons {
         grid-template-columns: 1fr;
     }
+
 	
 	.champion-comparison {
         grid-template-columns: 1fr;

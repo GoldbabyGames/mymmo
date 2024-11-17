@@ -3,37 +3,45 @@ class GameClient {
     constructor() {
         console.log('GameClient initializing...');
         this.socket = window.gameSocket;
-		
-		// Add test session check
-		const urlParams = new URLSearchParams(window.location.search);
-		const isTestSession = urlParams.get('testSession');
-		console.log('Session type:', { isTestSession, socketId: this.socket?.id });
-		
-		
-        this.hasChampion = false;
-        this.currentChampion = null;
-        this.pendingChampion = null;
-        this.currentOutfit = null;  // Initialize to null
-        this.modalContainer = null;
+		this.hasChampion = false;
+		this.currentChampion = null; // Add this to track current champion
+		this.pendingChampion = null;
+		this.currentOutfit = null;  // Initialize outfit data to null
+		this.modalContainer = null;
         
         if (!this.socket) {
             console.error('Socket.IO not initialized!');
             return;
         }
-
-        // Create ViewManager instance after socket initialization
+		
+		// Create ViewManager instance
         console.log('Creating ViewManager instance...');
         this.viewManager = new ViewManager(this);
 
+        // Initialize only if not already initialized
         if (!this.initialized) {
             console.log('First time initialization of GameClient');
             this.setupSocketListeners();
             this.setupChampionSocketListeners();
-            this.setupArenaListeners();
+			this.setupArenaListeners(); 
             this.initializeFormHandler();
             this.checkInitialState();
             this.initialized = true;
         }
+		
+		// Add simple connection event listeners for debugging
+        this.socket.on('connect', () => {
+            console.log('Socket connected successfully:', this.socket.id);
+        });
+
+        this.socket.on('connect_error', (error) => {
+            console.error('Socket connection error:', error);
+            this.showError('Connection error. Please refresh the page.');
+        });
+
+        this.socket.on('disconnect', () => {
+            console.log('Socket disconnected');
+        });
     }
 	
 	 // Add this method
@@ -109,26 +117,14 @@ class GameClient {
 		
 		// Game state events
 		this.socket.on('outfit-created', (outfit) => {
-			console.log('Received outfit-created event:', outfit);
-			
-			// Store outfit data first
-			this.currentOutfit = { ...outfit };  // Make a copy of the outfit data
-			this.currentOutfitId = outfit._id;
-			
-			// Update UI state
-			this.hideOutfitCreation();
-			this.showGameArea();
-			this.updateOutfitDisplay(outfit);
-			
-			// New outfit has no champion by definition
-			this.currentChampion = null;
-			this.hasChampion = false;
-			this.updateChampionDisplay(null);
-			this.viewManager.setHasChampion(false);
-			
-			// Initialize the game state in ViewManager
-			this.viewManager.initializeGameState(outfit);
-		});
+            console.log('Received outfit-created event:', outfit);
+            this.currentOutfitId = outfit._id;
+            this.hideOutfitCreation();
+            this.showGameArea();
+            this.updateOutfitDisplay(outfit);
+            // New outfit has no champion
+            this.updateChampionDisplay(null);
+        });
 
 		this.socket.on('error', (error) => {
 			console.error('Received error from server:', error);
@@ -194,43 +190,23 @@ class GameClient {
 		});
 
         this.socket.on('champion-hired', (data) => {
-			console.log('Champion hired event triggered:', {
-				championData: data.champion,
-				outfitData: data.outfit,
-				currentTab: this.viewManager?.activeTab,
-				hasViewManager: !!this.viewManager
-			});
-			
+			console.log('Champion hired:', data);
 			const { champion, outfit } = data;
 			
 			// Update client state
 			this.currentChampion = champion;
 			this.hasChampion = true;
-			this.pendingChampion = null;
-			
-			console.log('After state update:', {
-				currentChampion: this.currentChampion,
-				hasChampion: this.hasChampion,
-				viewManagerHasChampion: this.viewManager?.hasChampion
-			});
-			
-			// Update displays
+			this.pendingChampion = null; // Clear pending champion
 			this.updateChampionDisplay(champion);
 			this.updateOutfitDisplay(outfit);
 			
-			// Force update ViewManager state
-			if (this.viewManager) {
-				this.viewManager.setHasChampion(true);
-			}
-			
-			// Clean up modal
+			// Clean up modal if it exists
 			if (this.modalContainer) {
 				ReactDOM.unmountComponentAtNode(this.modalContainer);
 			}
 			
 			this.viewManager.hideChampionSelection(); 
 		});
-		
 		
 		this.socket.on('champion-status-changed', (champion) => {
 			console.log('Champion status changed:', champion);
@@ -628,16 +604,9 @@ class GameClient {
 
 
 	getCurrentOutfit() {
-        console.log('Getting current outfit:', this.currentOutfit);
-        // Add validation and default level
-        if (this.currentOutfit && !this.currentOutfit.structures) {
-            this.currentOutfit.structures = {
-                trainingFacility: { level: 1 },
-                library: { level: 1 }
-            };
-        }
-        return this.currentOutfit;
-    }
+		console.log('Getting current outfit:', this.currentOutfit);
+		return this.currentOutfit;
+}
 
 
     hideOutfitCreation() {

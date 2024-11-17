@@ -4,7 +4,7 @@ const TrainingInterface = function TrainingInterface({ facilityLevel }) {
     const [trainingState, setTrainingState] = React.useState({
         isTraining: false,
         timeRemaining: 0,
-        trainingCost: 100,  // Set minimum cost as initial state
+        trainingCost: 0,
         canAffordTraining: false
     });
     
@@ -112,35 +112,6 @@ const TrainingInterface = function TrainingInterface({ facilityLevel }) {
         };
     }, [trainingState.isTraining, trainingState.timeRemaining]);
 
-    // Get button status and message
-    const getButtonStatus = () => {
-        const champion = window.gameClient?.currentChampion;
-        const currentGold = window.gameClient?.currentOutfit?.gold || 0;
-        
-        if (!champion) {
-            return {
-                disabled: true,
-                message: "No Champion available"
-            };
-        }
-
-        const currentTrainingCost = champion.level * 100;
-        
-        if (currentGold < currentTrainingCost) {
-            return {
-                disabled: true,
-                message: `Insufficient gold. Need ${currentTrainingCost} gold.`
-            };
-        }
-
-        return {
-            disabled: false,
-            message: ""
-        };
-    };
-
-    const buttonStatus = getButtonStatus();
-
     return React.createElement('div', { className: 'training-ground-content' }, [
         React.createElement('h2', { key: 'title' }, `Training Ground: Level ${facilityLevel}`),
         
@@ -192,14 +163,13 @@ const TrainingInterface = function TrainingInterface({ facilityLevel }) {
                                 className: 'text-sm' 
                             }, 'Start training to improve your champion\'s attributes'),
                             React.createElement('button', {
-                                key: 'train-button',
+                                key: 'start-training',
                                 onClick: handleStartTraining,
-                                disabled: buttonStatus.disabled,
-                                title: buttonStatus.message,
+                                disabled: !trainingState.canAffordTraining,
                                 className: `button w-full p-2 rounded-lg ${
-                                    !buttonStatus.disabled 
+                                    trainingState.canAffordTraining 
                                         ? 'bg-blue-600 hover:bg-blue-700' 
-                                        : 'bg-gray-600 disabled-upgrade'
+                                        : 'bg-gray-600 cursor-not-allowed'
                                 }`
                             }, `Start Training (${trainingState.trainingCost} Gold)`)
                         ]

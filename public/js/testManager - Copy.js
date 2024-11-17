@@ -61,12 +61,14 @@ class TestSessionManager {
 
         document.body.appendChild(this.container);
 
+        // Add event listeners
         document.getElementById('create-test-session').onclick = () => this.createNewSession();
         document.getElementById('close-all-sessions').onclick = () => this.closeAllSessions();
 
+        // Add keyboard shortcut (Ctrl + T)
         document.addEventListener('keydown', (e) => {
             if (e.ctrlKey && e.key === 't') {
-                e.preventDefault();
+                e.preventDefault(); // Prevent new tab opening
                 this.toggleVisibility();
             }
         });
@@ -74,81 +76,49 @@ class TestSessionManager {
         this.updateSessionList();
     }
 
+    toggleVisibility() {
+        this.container.style.display = 
+            this.container.style.display === 'none' ? 'block' : 'none';
+    }
+
     createNewSession() {
-		if (this.sessions.length >= 6) {
-			alert('Maximum of 6 test sessions reached');
-			return;
-		}
+        if (this.sessions.length >= 6) {
+            alert('Maximum of 6 test sessions reached');
+            return;
+        }
 
-		const sessionId = `test_${Date.now()}_${this.nextId}`;
-		const sessionUrl = new URL(window.location.origin);
-		sessionUrl.searchParams.set('testSession', sessionId);
+        const width = 800;
+        const height = 600;
+        const left = (window.screen.width - width) / 2 + (this.nextId * 50);
+        const top = (window.screen.height - height) / 2 + (this.nextId * 50);
 
-		// Clear any existing test session data before opening new window
-		fetch(`/cleanup-test-session?testSession=${sessionId}`, {
-			credentials: 'include' // Important: Include credentials to clear cookies
-		}).then(() => {
-			const width = 800;
-			const height = 600;
-			const left = (window.screen.width - width) / 2 + (this.nextId * 50);
-			const top = (window.screen.height - height) / 2 + (this.nextId * 50);
-
-			const newWindow = window.open(
-				sessionUrl.toString(),
-				`TestSession${this.nextId}`,
-				`width=${width},height=${height},left=${left},top=${top}`
-			);
-
-			if (newWindow) {
-				this.sessions.push({
-					id: this.nextId,
-					sessionId,
-					window: newWindow
-				});
-				
-				this.nextId++;
-				this.updateSessionList();
-
-				newWindow.addEventListener('beforeunload', () => {
-					// Clean up on window close
-					fetch(`/cleanup-test-session?testSession=${sessionId}`, {
-						keepalive: true,
-						credentials: 'include'
-					}).catch(console.error);
-
-					this.sessions = this.sessions.filter(s => s.sessionId !== sessionId);
-					this.updateSessionList();
-				});
-			}
-		}).catch(console.error);
-	}
-
-    // Helper method for session cleanup
-	cleanupTestSession(sessionId) {
-		console.log('Cleaning up test session:', sessionId);
-		try {
-			localStorage.removeItem(`test_session_${sessionId}`);
-			sessionStorage.removeItem(`test_session_${sessionId}`);
-		} catch (e) {
-			console.warn('Could not clear session storage during cleanup:', e);
-		}
-	}
+        console.log('Creating new test session:', this.nextId);
+        const sessionUrl = `${window.location.origin}?testSession=${this.nextId}`;
+        const newWindow = window.open(
+            sessionUrl, 
+            `TestSession${this.nextId}`, 
+            `width=${width},height=${height},left=${left},top=${top}`
+        );
+        
+        if (newWindow) {
+            this.sessions.push({ 
+                id: this.nextId, 
+                window: newWindow 
+            });
+            this.nextId++;
+            this.updateSessionList();
+        }
+    }
 
     closeAllSessions() {
         console.log('Closing all test sessions');
         this.sessions.forEach(session => {
             if (!session.window.closed) {
-                this.cleanupTestSession(session.sessionId);
                 session.window.close();
             }
         });
         this.sessions = [];
         this.updateSessionList();
-    }
-
-    toggleVisibility() {
-        this.container.style.display = 
-            this.container.style.display === 'none' ? 'block' : 'none';
     }
 
     updateSessionList() {
@@ -170,7 +140,7 @@ class TestSessionManager {
                         background: ${session.window.closed ? '#e74c3c' : '#2ecc71'};
                         display: inline-block;
                     "></span>
-                    Test Player ${session.id} (${session.sessionId})
+                    Test Player ${session.id}
                 </div>
             `).join('') :
             '<div style="color: #95a5a6;">No test sessions active</div>';
@@ -178,7 +148,7 @@ class TestSessionManager {
 }
 
 // Initialize only in main window
-if (typeof window !== 'undefined' && !new URLSearchParams(window.location.search).get('testSession')) {
+if (typeof window !== 'undefined') {
     window.addEventListener('DOMContentLoaded', () => {
         window.testManager = new TestSessionManager();
     });

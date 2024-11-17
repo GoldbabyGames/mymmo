@@ -14,9 +14,19 @@ const { monitor } = require('@colyseus/monitor');
 const initializeGameSockets = require('./socket/gameSocket');
 const ArenaRoom = require('./rooms/ArenaRoom');
 
-// Create Express app and servers
+// First, create a separate session store for test sessions
+const mainSessionStore = MongoStore.create({
+    mongoUrl: 'mongodb://localhost:27017/rpg_game',
+    collectionName: 'sessions'
+});
+
+const testSessionStore = new Map(); // In-memory store for test sessions
+
+// Create Express app and main server
 const app = express();
 const mainServer = http.createServer(app);
+
+// Create separate server for Colyseus
 const arenaServer = http.createServer();
 arenaServer.on('request', arenaApp);
 
@@ -34,7 +44,7 @@ gameServer.define("arena_room", ArenaRoom)
 
 arenaApp.use("/colyseus", monitor());
 
-// Initialize Socket.IO with CORS
+// Initialize Socket.IO for base game
 const io = socketIo(mainServer, {
     cors: {
         origin: "http://localhost:3000",
@@ -47,8 +57,6 @@ const io = socketIo(mainServer, {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// In-memory store for test sessions
-const testSessionStore = new Map();
 
 // Single source of truth for session configuration
 const sessionConfig = {
@@ -67,7 +75,35 @@ const sessionConfig = {
     name: 'gameSession'
 };
 
-// Session handling middleware
+
+// Create the main session middleware
+const mainSessionMiddleware = session({
+    secret: 'dev-secret-key',
+    resave: false,
+    saveUninitialized: true,
+    store: mainSessionStore,
+    cookie: {
+        maxAge: 30 * 24 * 60 * 60 * 1000
+    }
+});
+
+// Create combined session middleware that handles both regular and test sessions
+// Update session middleware to be more explicit
+const sessionMiddleware = session({
+    secret: 'dev-secret-key',
+    resave: false,
+    saveUninitialized: true,
+    store: MongoStore.create({
+        mongoUrl: 'mongodb://localhost:27017/rpg_game',
+    }),
+    cookie: {
+        maxAge: 30 * 24 * 60 * 60 * 1000
+    }
+});
+
+app.use(sessionMiddleware);
+
+// Clear session middleware - simplified and more explicit
 app.use((req, res, next) => {
     // Log incoming request details
     console.log('\nSession Diagnostic -----------------');
@@ -82,24 +118,24 @@ app.use((req, res, next) => {
     const testSession = req.query.testSession;
     
     if (testSession) {
-        // Test session configuration
+        // For test sessions, use a completely separate session configuration
         const testConfig = {
             secret: 'dev-secret-key',
             resave: false,
             saveUninitialized: true,
-            store: new session.MemoryStore(),
+            store: new session.MemoryStore(), // Memory-only store for test sessions
             cookie: {
-                maxAge: null,
-                expires: false,
+                maxAge: null,        // Session cookie only - dies when browser closes
+                expires: false,      // Ensure cookie doesn't persist
                 path: '/',
                 httpOnly: true,
-                name: `test_${testSession}`
+                name: `test_${testSession}` // Unique name per test session
             }
         };
         
-        // Clear existing cookies
+        // Important: Clear any existing game session cookie
         res.clearCookie('gameSession', { path: '/' });
-        res.clearCookie('connect.sid', { path: '/' });
+        res.clearCookie('connect.sid', { path: '/' });  // Clear default session cookie if it exists
         
         session(testConfig)(req, res, (err) => {
             if (err) {
@@ -107,6 +143,7 @@ app.use((req, res, next) => {
                 return next(err);
             }
 
+            // Generate new test session data
             req.session.regenerate((err) => {
                 if (err) {
                     console.error('Error regenerating test session:', err);
@@ -126,55 +163,25 @@ app.use((req, res, next) => {
             });
         });
     } else {
-        // Main session handling
-        session(sessionConfig)(req, res, (err) => {
-            if (err) {
-                console.error('Main session error:', err);
-                return next(err);
-            }
-
-            if (!req.session.playerId) {
-                req.session.playerId = new mongoose.Types.ObjectId().toString();
-                req.session.isTestSession = null;
-                console.log('Created new main session:', {
-                    playerId: req.session.playerId,
-                    sessionID: req.sessionID
-                });
-            }
-            
-            next();
-        });
+        // Use existing session middleware for main sessions
+        next();
     }
 });
 
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Routes
+// Root route
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.get('/cleanup-test-session', (req, res) => {
-    const testSession = req.query.testSession;
-    if (testSession) {
-        res.clearCookie(`test_${testSession}`, { 
-            path: '/',
-            httpOnly: true
-        });
-        res.clearCookie('gameSession', { path: '/' });
-        res.clearCookie('connect.sid', { path: '/' });
-        
-        console.log('Cleaned up test session:', testSession);
-    }
-    res.sendStatus(200);
-});
-
-// Socket.IO session handling
+// Update Socket.IO middleware
 io.use((socket, next) => {
-    session(sessionConfig)(socket.request, {}, () => {
+    sessionMiddleware(socket.request, {}, () => {
         const testSession = socket.handshake.query.testSession;
         
+        // For test sessions, always ensure we have the right session data
         if (testSession) {
             if (!socket.request.session.isTestSession) {
                 socket.request.session.playerId = new mongoose.Types.ObjectId().toString();
@@ -182,6 +189,7 @@ io.use((socket, next) => {
                 socket.request.session.save();
             }
         } else {
+            // For main sessions, ensure we don't have test session data
             socket.request.session.isTestSession = null;
             socket.request.session.save();
         }
@@ -190,7 +198,27 @@ io.use((socket, next) => {
     });
 });
 
-// Socket connection handling
+// Add cleanup route - access this once to reset everything
+// Add cleanup endpoint for test sessions
+app.get('/cleanup-test-session', (req, res) => {
+    const testSession = req.query.testSession;
+    if (testSession) {
+        // Clear the specific test session cookie
+        res.clearCookie(`test_${testSession}`, { 
+            path: '/',
+            httpOnly: true
+        });
+        
+        // Also clear any potential main session cookies
+        res.clearCookie('gameSession', { path: '/' });
+        res.clearCookie('connect.sid', { path: '/' });
+        
+        console.log('Cleaned up test session:', testSession);
+    }
+    res.sendStatus(200);
+});
+
+// Clean up test sessions
 io.on('connection', (socket) => {
     const testSession = socket.handshake.query.testSession;
     
@@ -216,7 +244,7 @@ mongoose.connect('mongodb://localhost:27017/rpg_game', {
     console.error('MongoDB connection error:', err);
 });
 
-// Start servers
+// Start both servers
 const MAIN_PORT = 3000;
 const ARENA_PORT = 2567;
 
