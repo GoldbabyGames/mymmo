@@ -1,62 +1,69 @@
 class ViewManager {
     constructor(gameClient) {
-        console.log('ViewManager initializing...');
+        console.log('ViewManager initializing...', {
+            isTestSession: new URLSearchParams(window.location.search).get('testSession'),
+            hasGameClient: !!gameClient
+        });
+        
+        // Core state
         this.gameClient = gameClient;
         this.hasChampion = false;
-        this.activeTab = 'management'; // Default tab
-		this.arenaRoot = null; // Add this line to store React root
+        this.activeTab = 'management';
+        
+        // React roots for components
+        this.arenaRoot = null;
+        this.trainingRoot = null;
+        
+        // Tab configuration
         this.tabs = [
             'management',
             'champion',
             'training-ground',
             'research',
-			'missions',
+            'missions',
             'arena'
         ];
-		
-		
-		// Add these diagnostic logs
-		console.log('Checking arena DOM structure...');
-		console.log('Queue screen:', document.getElementById('arena-queue-screen'));
-		console.log('Match screen:', document.getElementById('arena-match-screen'));
-		
+
+        // Arena state
+        this.arenaQueueStatus = 'idle';
+
+        // Initialize event listeners
         this.setupEventListeners();
-        this.updateUpgradeButtons();
         this.setupChampionEventListeners();
-		
-		this.arenaQueueStatus = 'idle'; 
-        this.setupArenaEventListeners(); 
+        this.setupArenaEventListeners();
+        
+        // Initial UI updates
+        this.updateUpgradeButtons();
     }
 
-	// Add new method to handle initial state setup
+	//Method to handle initial state setup
     initializeGameState(outfit) {
-        console.log('Initializing game state with outfit:', outfit);
-		console.log('Current champion state:', this.hasChampion);
-		
-		 if (!outfit) {
+        console.log('Initializing game state:', {
+            isTestSession: new URLSearchParams(window.location.search).get('testSession'),
+            outfit,
+            currentTab: this.activeTab,
+            hasChampion: outfit?.champion !== null
+        });
+        
+        if (!outfit) {
             console.warn('No outfit data provided for initialization');
             return;
-		 }
-			
-		
-		// Update champion state if needed
+        }
+
+        // Store reference to current outfit data
+        this.currentOutfit = outfit;
+
+        // Update champion state if needed
         if (outfit.champion) {
-			console.log('Setting champion state from outfit data');
+            console.log('Setting champion state from outfit data');
             this.setHasChampion(true);
         }
-        
-		// Defer the initialization to next tick to ensure champion state is set
-        setTimeout(() => {
-            console.log('Deferred initialization - champion state:', this.hasChampion);
-			
-			// Update the current tab content (management by default)
-            this.updateTabContent(this.activeTab);
-			
-			// Force update of structure costs
-			this.updateStructureCosts(outfit);
-        
-			
-        }, 0); 
+
+        // Update all tab content
+        this.tabs.forEach(tab => {
+            console.log(`Initial update for tab: ${tab}`);
+            this.updateTabContent(tab);
+        });
     }
 
 
@@ -243,53 +250,76 @@ class ViewManager {
 	}
 
     updateTrainingGroundTab() {
-		console.log('Updating training ground tab - START');
-		const trainingGround = document.getElementById('training-ground');
-		const currentOutfit = this.gameClient.getCurrentOutfit();
-		console.log('Current outfit data:', currentOutfit);
+        console.log('Updating training ground tab - START');
+        const trainingGround = document.getElementById('training-ground');
+        const currentOutfit = this.gameClient.getCurrentOutfit();
+        console.log('Current outfit data for training:', currentOutfit);
 
-		if (trainingGround && currentOutfit?.structures?.trainingFacility) {
-			const level = currentOutfit.structures.trainingFacility.level;
-			console.log('Training Facility Level:', level);
-			const content = trainingGround.querySelector('.training-ground-content');
-			
-			if (content) {
-				// Create root if it doesn't exist
-				if (!this.trainingRoot) {
-					this.trainingRoot = ReactDOM.createRoot(content);
-				}
-				
-				// Render the training interface with the facility level
-				console.log('Rendering TrainingInterface with level:', level);
-				this.trainingRoot.render(
-					React.createElement(window.TrainingInterface, {
-						facilityLevel: level
-					})
-				);
-			}
-		}
-		console.log('Updating training ground tab - END');
-	}
+        if (!trainingGround) {
+            console.error('Training ground container not found');
+            return;
+        }
+
+        // Use default level if no outfit data
+        const facilityLevel = currentOutfit?.structures?.trainingFacility?.level || 1;
+        console.log('Training Facility Level:', facilityLevel);
+
+        const content = trainingGround.querySelector('.training-ground-content');
+        if (content) {
+            // Ensure React and TrainingInterface are available
+            if (!window.React || !window.ReactDOM || !window.TrainingInterface) {
+                console.error('Required dependencies not loaded:', {
+                    react: !!window.React,
+                    reactDOM: !!window.ReactDOM,
+                    trainingInterface: !!window.TrainingInterface
+                });
+                return;
+            }
+
+            try {
+                // Create root if it doesn't exist
+                if (!this.trainingRoot) {
+                    console.log('Creating new training root');
+                    this.trainingRoot = ReactDOM.createRoot(content);
+                }
+
+                console.log('Rendering TrainingInterface with level:', facilityLevel);
+                this.trainingRoot.render(
+                    React.createElement(window.TrainingInterface, {
+                        facilityLevel: facilityLevel
+                    })
+                );
+            } catch (error) {
+                console.error('Error rendering TrainingInterface:', error);
+                content.innerHTML = '<div class="error">Error loading training interface</div>';
+            }
+        }
+    }
 
     updateResearchTab() {
-		console.log('Updating research tab');
-		const research = document.getElementById('research');
-		const currentOutfit = this.gameClient.getCurrentOutfit();
-		console.log('Current outfit data:', currentOutfit);
+        console.log('Updating research tab');
+        const research = document.getElementById('research');
+        const currentOutfit = this.gameClient.getCurrentOutfit();
+        
+        // Use default level if no outfit data
+        const libraryLevel = currentOutfit?.structures?.library?.level || 1;
+        console.log('Library Level:', libraryLevel);
 
-		if (research && currentOutfit?.structures?.library) {
-			const level = currentOutfit.structures.library.level;
-			console.log('Library Level:', level);
-			const content = research.querySelector('.research-content');
-			if (content) {
-				content.innerHTML = `
-					<h2>Research: Level ${level}</h2>
-					<div class="placeholder">Research functionality coming soon...</div>
-				`;
-			}
-		} 
-		console.log('Updating research tab - END');
-	}
+        if (research) {
+            const content = research.querySelector('.research-content');
+            if (content) {
+                content.innerHTML = `
+                    <h2>Research Laboratory Level ${libraryLevel}</h2>
+                    <div class="research-interface">
+                        <p>Research new technologies and upgrades for your outfit.</p>
+                        <div class="research-options">
+                            <p>Research options will be available soon...</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+    }
 
 	updateMissionsTab() {
         console.log('Updating missions tab');
@@ -298,10 +328,49 @@ class ViewManager {
     }
 
     updateArenaTab() {
-        console.log('Updating arena tab');
-        const arenaParticipants = document.getElementById('arena-participants');
-        // Arena update logic will be implemented later
-    }
+		console.log('Updating arena tab with current state:', {
+			hasChampion: this.gameClient?.hasChampion,
+			currentChampion: this.gameClient?.currentChampion,
+			activeTab: this.activeTab,
+			arenaListenersInitialized: this.arenaListenersInitialized
+		});
+
+		const arenaQueueScreen = document.getElementById('arena-queue-screen');
+		if (!arenaQueueScreen) {
+			console.error('Arena queue screen element not found');
+			return;
+		}
+
+		// Force fresh check of champion status
+		const hasChampion = this.gameClient?.currentChampion !== null;
+		console.log('Champion status check:', hasChampion);
+
+		if (!hasChampion) {
+			arenaQueueScreen.innerHTML = `
+				<div class="arena-status">
+					<p class="warning">You need a champion to enter the arena.</p>
+				</div>`;
+			return;
+		}
+
+		// Ensure queue button is present for champions
+		if (!arenaQueueScreen.querySelector('[data-action="queue-arena"]')) {
+			arenaQueueScreen.innerHTML = `
+				<h3>Arena Queue</h3>
+				<div class="arena-actions">
+					<button class="button" data-action="queue-arena">Enter Arena Queue</button>
+				</div>`;
+			
+			// Re-initialize arena listeners since we just recreated the button
+			this.setupArenaEventListeners();
+		}
+
+		// Only setup event listeners once per tab activation
+		if (!this.arenaListenersInitialized) {
+			this.setupArenaEventListeners();
+			this.arenaListenersInitialized = true;
+		}
+	}
 
     showChampionSelection() {
         const modal = document.getElementById('champion-selection');
@@ -331,17 +400,26 @@ class ViewManager {
         });
     }
 
-    setHasChampion(value) {
-		console.log('Setting hasChampion to:', value);
-		this.hasChampion = value;
-		this.updateUpgradeButtons();  // This line is important!
-		
-		// Force update structure costs when champion state changes
-		const currentOutfit = this.gameClient.getCurrentOutfit();
-		if (currentOutfit) {
-			this.updateStructureCosts(currentOutfit);
-		}
-	}
+    // Update the setHasChampion method to ensure proper state updates
+	setHasChampion(value) {
+        console.log('ViewManager.setHasChampion called:', {
+            newValue: value,
+            previousValue: this.hasChampion,
+            activeTab: this.activeTab,
+            currentTab: document.querySelector('.tab-button.active')?.dataset?.tab
+        });
+        
+        this.hasChampion = value;
+        this.updateUpgradeButtons();
+        
+        // Force arena tab update
+        this.updateArenaTab();
+        
+        console.log('ViewManager state after setHasChampion:', {
+            hasChampion: this.hasChampion,
+            activeTab: this.activeTab
+        });
+    }
 
     updateStructureCosts(outfit) {
         console.log('Updating structure costs for outfit:', outfit);
@@ -417,49 +495,49 @@ class ViewManager {
     }
 	
 	setupArenaEventListeners() {
-		const queueButton = document.querySelector('[data-action="queue-arena"]');
-		
-		if (queueButton) {
-			const newButton = queueButton.cloneNode(true);
-			queueButton.parentNode.replaceChild(newButton, queueButton);
-			
-			newButton.addEventListener('click', async (e) => {
-				e.preventDefault();
-				
-				if (!this.gameClient.currentChampion) {
-					this.gameClient.showError('You need a champion to enter the arena');
-					return;
-				}
+    const queueButton = document.querySelector('[data-action="queue-arena"]');
+    
+    if (queueButton) {
+        const newButton = queueButton.cloneNode(true);
+        queueButton.parentNode.replaceChild(newButton, queueButton);
+        
+        newButton.addEventListener('click', async (e) => {
+            e.preventDefault();
+            
+            if (!this.gameClient.currentChampion) {
+                this.gameClient.showError('You need a champion to enter the arena');
+                return;
+            }
 
-				try {
-					// Clean champion data here before passing to Colyseus
-					const cleanChampionData = {
-						_id: this.gameClient.currentChampion._id,
-						name: this.gameClient.currentChampion.name,
-						physical: {
-							strength: { current: this.gameClient.currentChampion.physical.strength.current },
-							agility: { current: this.gameClient.currentChampion.physical.agility.current },
-							hardiness: { current: this.gameClient.currentChampion.physical.hardiness.current },
-							stamina: { current: this.gameClient.currentChampion.physical.stamina.current }
-						},
-						mental: {
-							intelligence: { current: this.gameClient.currentChampion.mental.intelligence.current },
-							unarmedSkill: { current: this.gameClient.currentChampion.mental.unarmedSkill.current },
-							weaponSkill: { current: this.gameClient.currentChampion.mental.weaponSkill.current },
-							survivalSkill: { current: this.gameClient.currentChampion.mental.survivalSkill.current }
-						}
-					};
+            try {
+                // Clean champion data here before passing to Colyseus
+                const cleanChampionData = {
+                    _id: this.gameClient.currentChampion._id,
+                    name: this.gameClient.currentChampion.name,
+                    physical: {
+                        strength: { current: this.gameClient.currentChampion.physical.strength.current },
+                        agility: { current: this.gameClient.currentChampion.physical.agility.current },
+                        hardiness: { current: this.gameClient.currentChampion.physical.hardiness.current },
+                        stamina: { current: this.gameClient.currentChampion.physical.stamina.current }
+                    },
+                    mental: {
+                        intelligence: { current: this.gameClient.currentChampion.mental.intelligence.current },
+                        unarmedSkill: { current: this.gameClient.currentChampion.mental.unarmedSkill.current },
+                        weaponSkill: { current: this.gameClient.currentChampion.mental.weaponSkill.current },
+                        survivalSkill: { current: this.gameClient.currentChampion.mental.survivalSkill.current }
+                    }
+                };
 
-					console.log('Cleaned champion data:', cleanChampionData);
-					const room = await window.colyseusClient.joinArenaMatch(cleanChampionData);
-					this.showArenaMatch(room, cleanChampionData);
-				} catch (error) {
-					console.error('Error joining arena:', error);
-					this.gameClient.showError('Failed to join arena: ' + error.message);
-				}
-			});
-		}
-	}
+                console.log('Cleaned champion data:', cleanChampionData);
+                const room = await window.colyseusClient.joinArenaMatch(cleanChampionData);
+                this.showArenaMatch(room, cleanChampionData);
+            } catch (error) {
+                console.error('Error joining arena:', error);
+                this.gameClient.showError('Failed to join arena: ' + error.message);
+            }
+        });
+    }
+}
 
 
 	showArenaMatch(room) {
@@ -539,22 +617,54 @@ class ViewManager {
 
 
     updateArenaTab() {
-    console.log('Updating arena tab');
-    
-    if (!this.gameClient.hasChampion) {
-        document.getElementById('arena-queue-screen').innerHTML = `
-            <div class="arena-status">
-                <p class="warning">You need a champion to enter the arena.</p>
-            </div>`;
-        return;
-    }
+        console.log('updateArenaTab called:', {
+            hasChampion: this.hasChampion,
+            clientHasChampion: this.gameClient?.hasChampion,
+            currentChampion: this.gameClient?.currentChampion,
+            activeTab: this.activeTab
+        });
+        
+        const arenaQueueScreen = document.getElementById('arena-queue-screen');
+        if (!arenaQueueScreen) {
+            console.error('Arena queue screen element not found');
+            return;
+        }
 
-    // Only setup event listeners once
-    if (!this.arenaListenersInitialized) {
-        this.setupArenaEventListeners();
-        this.arenaListenersInitialized = true;
+        // Check champion status
+        const hasChampion = this.gameClient?.currentChampion !== null;
+        console.log('Champion status check:', {
+            hasChampion,
+            viewManagerHasChampion: this.hasChampion,
+            clientCurrentChampion: this.gameClient?.currentChampion
+        });
+
+        if (!hasChampion) {
+            arenaQueueScreen.innerHTML = `
+                <div class="arena-status">
+                    <p class="warning">You need a champion to enter the arena.</p>
+                </div>`;
+            return;
+        }
+
+        // Ensure queue button is present for champions
+        if (!arenaQueueScreen.querySelector('[data-action="queue-arena"]')) {
+            console.log('Creating arena queue button');
+            arenaQueueScreen.innerHTML = `
+                <h3>Arena Queue</h3>
+                <div class="arena-actions">
+                    <button class="button" data-action="queue-arena">Enter Arena Queue</button>
+                </div>`;
+            
+            // Re-initialize arena listeners
+            this.setupArenaEventListeners();
+        }
+
+        // Only setup event listeners once per tab activation
+        if (!this.arenaListenersInitialized) {
+            this.setupArenaEventListeners();
+            this.arenaListenersInitialized = true;
+        }
     }
-}
 
 
     updateArenaQueueStatus(status) {

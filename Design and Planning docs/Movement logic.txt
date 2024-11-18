@@ -1,0 +1,16 @@
+Phase 1 (0-5 mins) - Exploration
+- Each player progresses through 4-5 "safety" tiles
+- Monster encounters scripted at M locations
+- Loot discoveries at L locations
+- 20% chance of deviating from main path per tile
+
+Phase 2 (5-10 mins) - Convergence
+- Players pushed toward middle ring
+- Water levels rise in outer zones
+- Higher chance of player encounters
+- Better loot in middle ring L rooms
+
+Phase 3 (10-15 mins) - Confrontation
+- All players forced toward C tiles
+- Outer and middle rings flood
+- Combat inevitable in central chamber complex

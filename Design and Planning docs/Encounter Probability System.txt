@@ -1,0 +1,20 @@
+Player vs Environment (PvE):
+- Monster Den (M) tiles:
+  - 100% spawn rate
+  - Monster level = player level ±1
+  - Loot chance: 60% common, 30% uncommon, 10% rare
+  
+Player vs Player (PvP):
+- Calculated per zone:
+  Outer Ring (0-5 mins):
+  - 5% chance when players within 3 tiles
+  - 20% chance when players adjacent
+  
+  Middle Ring (5-10 mins):
+  - 15% chance within 3 tiles
+  - 40% chance when adjacent
+  
+  Inner Ring/Central (10-15 mins):
+  - 30% chance within 3 tiles
+  - 80% chance when adjacent
+  - 100% chance in central chambers

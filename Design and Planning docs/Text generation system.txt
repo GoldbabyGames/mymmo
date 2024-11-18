@@ -1,0 +1,65 @@
+Base Description Layer:
+- Every tile has base description elements:
+  * Environmental features
+  * Atmosphere
+  * Sound effects
+  * Smell descriptions
+  * Visual elements
+
+Example Base Description Template:
+"{atmosphere} {visual} {sound} {smell}"
+
+Atmosphere options:
+- "The air grows thick with humidity"
+- "A chill draft whistles through the tunnel"
+- "Stale air hangs heavy in this section"
+- "Steam hisses from corroded pipes"
+
+Dynamic Event Layer:
+- Adds situational descriptions:
+  * Combat encounters
+  * Loot discoveries
+  * Player interactions
+  * Environmental changes
+
+Example Event Text:
+Combat: "A massive rat emerges from the shadows, 
+its red eyes gleaming. Your champion raises their 
+{weapon}, preparing for combat. The creature's 
+movements suggest {strength/weakness} based on your 
+combat experience."
+
+Discovery: "Your careful observation reveals {item} 
+partially hidden beneath debris. Your champion 
+{action based on survival skill} to retrieve it."
+
+Player Encounter: "The echoes of movement ahead 
+grow stronger. Another champion emerges from the 
+gloom, their {weapon/armor} glinting in the dim 
+light. Combat seems {inevitable/likely/possible}."
+
+Phase-Specific Descriptions:
+Phase 1 (Exploration):
+"The tunnels stretch ahead, unexplored and promising.
+{base description} {discovery elements}"
+
+Phase 2 (Convergence):
+"Rising water levels force you to choose your path
+carefully. {base description} {urgency elements}"
+
+Phase 3 (Final):
+"The flooding tunnels funnel you toward the central
+chambers. {base description} {combat preparation}"
+
+Environmental Status Updates:
+- Regular updates on changing conditions:
+  * Water level changes
+  * Distance from center
+  * Nearby activity
+  * Time remaining
+
+Example Status Update:
+"The water level has risen to knee height.
+Your champion can hear combat echoing from
+the central chambers. Multiple sets of footprints
+suggest recent activity ahead."

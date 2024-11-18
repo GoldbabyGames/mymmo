@@ -1,0 +1,18 @@
+Phase 1 (0-5 mins):
+- All water channels (~) are shallow
+- Movement penalty: 20% slower
+- Can cross freely
+
+Phase 2 (5-10 mins):
+- Outer ring begins flooding
+- Tiles flood in sequence from outside
+- Every 30 seconds:
+  - New outer tile floods
+  - Flooded tile damage: 5% max HP/second
+  - Forces movement inward
+  
+Phase 3 (10-15 mins):
+- Middle ring floods
+- Increased flood damage: 10% max HP/second
+- Only central chambers and immediate approaches safe
+- Creates urgency for final confrontations

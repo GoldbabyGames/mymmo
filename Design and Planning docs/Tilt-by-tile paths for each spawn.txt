@@ -1,0 +1,20 @@
+P1 (SE) Primary Path:
+- Start → Monster Den (20% combat chance)
+- Move SW through 3 regular tiles
+- Encounter Loot Room L1 (guaranteed loot)
+- Cross water channel (slow movement)
+- Access Junction X1
+- Progress toward Central chambers
+
+Similarly structured paths for each spawn but with variations:
+P2 (NE): Mirror of P1 southward
+P3/P4 (E): Direct westward paths
+P5/P6 (W): Direct eastward paths
+P7 (SW): Mirror of P2 northward
+P8 (NW): Mirror of P1 southward
+
+Deviation Logic:
+- Each tile has "weight" for next movement
+- Base: 70% chance follow primary path
+- 20% chance explore adjacent tile
+- 10% chance backtrack (reduced each time)

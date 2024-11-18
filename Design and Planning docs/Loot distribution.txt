@@ -1,0 +1,33 @@
+Tier 1 (Outer Ring):
+- Regular tiles: 
+  * 10% common loot
+  * 5% crafting materials
+- Monster Dens (M):
+  * 60% common weapon/armor
+  * 30% consumables
+  * 10% uncommon item
+- Loot Rooms (L):
+  * 100% guaranteed uncommon or better
+  * 20% chance additional item
+
+Tier 2 (Middle Ring):
+- Regular tiles:
+  * 15% uncommon loot
+  * 10% crafting materials
+- Monster Dens (M):
+  * 40% uncommon weapon/armor
+  * 40% consumables
+  * 20% rare item
+- Loot Rooms (L):
+  * 100% guaranteed rare or better
+  * 30% chance additional item
+
+Tier 3 (Central):
+- Central Chambers (C):
+  * 50% rare weapon/armor
+  * 30% unique items
+  * 20% legendary items
+- Final survivor bonus:
+  * Guaranteed legendary item
+  * Bonus crafting materials
+  * Arena victory rewards

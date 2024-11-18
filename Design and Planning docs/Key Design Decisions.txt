@@ -1,0 +1,27 @@
+Core Design Elements:
+
+25x25 tile map (625 tiles total)
+8 players per Arena match (4 East spawn, 4 West spawn)
+15-minute match duration split into 3 phases
+Text-based gameplay with rich descriptions
+Programmed movement patterns (no direct player control)
+
+Map Structure:
+
+Fixed layout (not procedurally generated)
+Clear zone progression (outer → middle → center)
+Strategic features (Monster Dens, Loot Rooms, Water Channels)
+Central chamber complex for final confrontations
+
+Progression System:
+
+Phase 1 (0-5 mins): Exploration and PvE
+Phase 2 (5-10 mins): Convergence and initial PvP
+Phase 3 (10-15 mins): Forced confrontation
+
+Core Mechanics:
+
+Movement based on champion stats
+Encounter probabilities by zone
+Flooding system for zone control
+Tiered loot distribution

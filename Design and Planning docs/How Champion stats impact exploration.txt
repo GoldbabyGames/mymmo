@@ -1,0 +1,37 @@
+Speed/Movement:
+- Base movement: 1 tile per 15 seconds
+- Agility modifier: 
+  * Every 10 points reduces time by 1 second
+  * Maximum 50% reduction at 75 agility
+  * Water movement penalty reduced by hardiness
+
+Detection & Awareness:
+- Intelligence affects information revealed:
+  * <30: Basic tile descriptions only
+  * 30-50: Reveals nearby loot chances
+  * 50-70: Warns of nearby players/monsters
+  * >70: Reveals detailed environment info
+
+Survival & Interaction:
+- Survival skill affects:
+  * Loot finding chance: +1% per point
+  * Safe path finding: +1% per point
+  * Trap detection: +2% per point
+  * Alternative route discovery: +1% per 2 points
+
+Combat Preparation:
+- Weapon skill determines:
+  * Chance to find weapon caches
+  * Quality of found weapons
+  * Combat positioning bonuses
+
+Example Stat Impact:
+High Intelligence (65) + High Survival (70):
+"Your keen senses detect fresh footprints leading west. 
+A partially concealed maintenance panel might contain 
+valuable supplies. The echoes suggest a large chamber 
+three tiles ahead."
+
+Low Intelligence (25) + Low Survival (20):
+"The dank tunnel continues ahead. Water drips from 
+the ceiling. The shadows seem to move."
